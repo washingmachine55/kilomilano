@@ -1,5 +1,6 @@
 import z from "zod";
 import { authLoginSchema, authRegisterSchema } from "../utils/schema.validations.js";
+import { responseWithStatus } from "../utils/RESPONSES.js";
 
 export async function verifyInputFields(req, res, next) {
 
@@ -11,14 +12,9 @@ export async function verifyInputFields(req, res, next) {
 	}
 
 	if (!reqData.success) {
-		return res.status(200).json([
-			{
-				type: 'validation_error',
-				body: z.flattenError(reqData.error).fieldErrors,
-				// message: reqData.error.issues.message.toString(),
-				// path: reqData.error.issues.path,
-			},
-		]);
+		return await responseWithStatus(res, 0, 400, "Validation Error. Please try again.", {
+			errors: z.flattenError(reqData.error).fieldErrors,
+		})
 	} else {
 		next()
 	}

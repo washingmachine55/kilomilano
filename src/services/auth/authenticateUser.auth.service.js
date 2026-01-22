@@ -50,8 +50,9 @@ export async function getUserId(userEmail, userPassword) {
 				const bcryptResult = await bcrypt.compare(userPassword, hashedPasswordFromDB);
 
 				if (bcryptResult == true) {
-					const credentialsCheck = await conn.query("SELECT id FROM tbl_users WHERE email = $1;", [userEmail]);
-					let result = credentialsCheck.rows[0].id
+					// const credentialsCheck = await conn.query("SELECT id FROM tbl_users WHERE email = $1;", [userEmail]);
+					const credentialsCheck = await conn.query("SELECT u.id, u.email, u.access_type, u.created_at, ud.first_name, ud.last_name, ud.profile_pic_url from tbl_users u JOIN tbl_users_details ud ON ud.users_id = u.id WHERE u.email = $1;", [userEmail]);
+					let result = credentialsCheck.rows[0]
 					return result;
 				} else {
 					return false;

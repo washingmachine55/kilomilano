@@ -1,6 +1,6 @@
 import express from 'express';
 import { verifyInputFields } from '../middlewares/verifyInputFields.auth.js';
-import { loginUser, registerUser, verifyUserToken } from '../controllers/authController.js';
+import { loginUser, registerUser, verifyUserToken } from '../controllers/auth.controller.js';
 import verifyToken from '../middlewares/verifyToken.auth.js';
 const router = express.Router();
 

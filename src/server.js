@@ -13,6 +13,7 @@ const port = 3333
 
 app.use(express.json())
 app.use(compression())
+app.use(express.static('../public'));
 
 app.use(cors({
 	origin: '*',
@@ -21,38 +22,23 @@ app.use(cors({
 
 app.set('query parser', 'simple')
 
+app.use('/api-docs', SwaggerUI.serve, SwaggerUI.setup(swaggerDocument));
+
 import authRoutes from "./routes/auth.routes.js"
 app.use("/auth", authRoutes)
 
-app.get("/", (req, res) => {
-	res.json({
-		app_name: `${env.APP_NAME}`,
-		api_endpoints_available: {
-			authentication: {
-				register: {
-					endpoint:"/auth/register",
-					method: "POST",
-				}
-			}
-		}
-		// url_query_parameter_defaults: {
-		// 	limit: '10',
-		// 	orderby: 'id',
-		// 	offset: '0',
-		// 	sort: 'ASC'
-		// }
+import usersRoutes from "./routes/users.routes.js"
+app.use("/users", usersRoutes)
+
+app.use((req, res) => {
+	res.status(404).json({
+		status: 404,
+		message: 'Page not found. Use the default root endpoint for a guide on available APIs.',
 	});
-})
+});
 
-// app.use((req, res) => {
-// 	res.status(404).json({
-// 		status: 404,
-// 		message: 'Page not found. Use the default root endpoint for a guide on available APIs.',
-// 	});
-// });
-
-app.use('/api-docs', SwaggerUI.serve, SwaggerUI.setup(swaggerDocument));
-
+// ------------------------------------------------------------------------
+// App Initialization
 app.listen(port, () => {
 	console.log(`${env.APP_NAME} listening on port ${port}`)
 })

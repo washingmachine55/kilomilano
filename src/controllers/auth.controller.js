@@ -1,7 +1,6 @@
-// import { sendVerificationEmail, compareValidOTP, userIsVerifiedCheck } from '../services/auth/sendAndSaveVerificationEmailDatabaseService.js';
-import { getUserId, isCredentialsMatching } from '../services/auth/authenticateUserDatabaseService.js';
+import { getUserId as getUserIdAndAllDetails, isCredentialsMatching } from '../services/auth/authenticateUser.auth.service.js';
 import { checkExistingEmail } from '../services/auth/checkExistingEmail.auth.service.js';
-import registerUserToDatabase from '../services/auth/registerDatabaseService.js';
+import registerUserToDatabase from '../services/auth/registerUser.auth.service.js';
 import { confirmPassword } from '../utils/confirmPassword.js';
 
 import jwt from 'jsonwebtoken';
@@ -9,16 +8,18 @@ import jwt from 'jsonwebtoken';
 // import { formatDate, formatDistance } from 'date-fns';
 // import { TZDate } from '@date-fns/tz';
 // import transporter from '../config/mailTransporter.js';
-import {env} from 'node:process';
-import { rejectedResponse } from '../utils/RESPONSES.js';
+import { env } from 'node:process';
+import { responseWithStatus } from '../utils/RESPONSES.js';
 import { EMAIL_EXISTS_ALREADY, MISSING_INPUT_FIELDS, PASSWORDS_DONT_MATCH } from '../utils/CONSTANTS.js';
 const JWT_SECRET_KEY = env.JWT_SECRET_KEY;
 
 export async function registerUser(req, res) {
 	// #swagger.tags = ['Authentication']
+	// #swagger.summary = 'Endpoint to allow the user to register their account for the first time.'
+	// #swagger.description = 'This endpoint would only be used once to register a new user'
 	/*  #swagger.requestBody = {
 			required: true,
-			schema: { $ref: "#/components/schemas/authSchema" }  
+			schema: { $ref: "#/components/schemas/registerSchema" }  
 		} 
 	*/
 
@@ -31,12 +32,12 @@ export async function registerUser(req, res) {
 				name: 'John Doe',
 				email: 'example@example.com',
 				password: 'secret_password',
-				hashedPassword: 'secret_password'
+				confirmed_password: 'secret_password'
 			}
 		}
 	} */
 
-	
+
 	let request = Object.values(req.body.data);
 	let userName = request[0];
 	let userEmail = request[1];
@@ -44,50 +45,53 @@ export async function registerUser(req, res) {
 	let userConfirmedPassword = request[3];
 
 	if (userName == null || userEmail == null || userPassword == null || userConfirmedPassword == null) {
-		return rejectedResponse(res, 200, 'Error', MISSING_INPUT_FIELDS)
+		return responseWithStatus(res, 1, 400, MISSING_INPUT_FIELDS)
 	} else {
 
-	// --------------------------------------------------------------------------- //
-	// Check if email exists in database already
-	// --------------------------------------------------------------------------- //
-	let existingEmailCheck = await checkExistingEmail(userEmail);
+		// --------------------------------------------------------------------------- //
+		// Check if email exists in database already
+		// --------------------------------------------------------------------------- //
+		let existingEmailCheck = await checkExistingEmail(userEmail);
 
-	if (existingEmailCheck == true) {
-		return rejectedResponse(res, 200, 'Error', EMAIL_EXISTS_ALREADY)
-	}
-	// --------------------------------------------------------------------------- //
-	// Password Confirmation Check
-	// --------------------------------------------------------------------------- //
-	let confirmPasswordCheck = confirmPassword(userPassword, userConfirmedPassword);
+		if (existingEmailCheck == true) {
+			return responseWithStatus(res, 0, 400, 'Error', EMAIL_EXISTS_ALREADY)
+		}
+		// --------------------------------------------------------------------------- //
+		// Password Confirmation Check
+		// --------------------------------------------------------------------------- //
+		let confirmPasswordCheck = confirmPassword(userPassword, userConfirmedPassword);
 
-	if (confirmPasswordCheck == false) {
-		return rejectedResponse(res, 200, 'Error', PASSWORDS_DONT_MATCH)
-	}
+		if (confirmPasswordCheck == false) {
+			return responseWithStatus(res, 0, 400, 'Error', PASSWORDS_DONT_MATCH)
+		}
 
 		// --------------------------------------------------------------------------- //
 		// Save User details to Database if all checks are cleared
 		// --------------------------------------------------------------------------- //
 		const entryArray = [userName, userEmail, userPassword];
 		try {
-			const userRegistrationResult =  await registerUserToDatabase(entryArray);
-
+			const userRegistrationResult = await registerUserToDatabase(entryArray);
 			const token = jwt.sign({ id: userRegistrationResult.id }, JWT_SECRET_KEY, { expiresIn: '1h' });
-			console.log(token);
-			
-			return res.format({
-				json() {
-					res.send([
-						{
-							type: 'success',
-							message: 'Registered Successfully!',
-							data: {
-								user_id: userRegistrationResult.id,
-								token: token,
-							}
-						},
-					]);
-				},
-			});
+
+			return await responseWithStatus(res, 1, 201, "Sign Up successful!", {
+				"user_details": userRegistrationResult,
+				"token": token,
+			})
+
+			// return res.format({
+			// 	json() {
+			// 		res.send([
+			// 			{
+			// 				type: 'success',
+			// 				message: 'Registered Successfully!',
+			// 				data: {
+			// 					user_id: userRegistrationResult.id,
+			// 					token: token,
+			// 				}
+			// 			},
+			// 		]);
+			// 	},
+			// });
 		} catch (error) {
 			console.error('Error creating record:', error);
 		}
@@ -97,6 +101,24 @@ export async function registerUser(req, res) {
 export async function loginUser(req, res) {
 	// #swagger.tags = ['Authentication']
 	// #swagger.summary = 'Endpoint to allow the user to login'
+	// #swagger.description = 'Used for to normally log in a user that is unauthenticated.'
+	/*  #swagger.requestBody = {
+		required: true,
+		schema: { $ref: "#/components/schemas/loginSchema" }  
+	} 
+	*/
+
+	/*  #swagger.parameters['body'] = {
+	in: 'body',
+	description: 'Some description...',
+	required: true,
+	schema: {
+		data: {
+			$email: 'example@example.com',
+			$password: 'secret_password',
+		}
+	}
+} */
 
 	let request = Object.values(req.body.data);
 	let userEmail = request[0];
@@ -109,55 +131,21 @@ export async function loginUser(req, res) {
 		let existingEmailCheck = await checkExistingEmail(userEmail);
 
 		if (existingEmailCheck == false) {
-			return await res.format({
-				json() {
-					res.send([
-						{
-							type: 'error',
-							message: "Email doesn't exist. Please sign up instead.",
-							data: {
-								token: 'Invalid Token' 
-							}
-						},
-					]);
-				},
-			});
+			return await responseWithStatus(res, 0, 400, "Email doesn't exist. Please sign up instead", null)
 		} else if (existingEmailCheck == true) {
 			// --------------------------------------------------------------------------- //
 			// Email and Password Combination Check
 			// --------------------------------------------------------------------------- //
 			let credentialMatchingResult = await isCredentialsMatching(userEmail, userPassword);
 			if (credentialMatchingResult == true) {
-				let userId = await getUserId(userEmail, userPassword);
-				const token = jwt.sign({ id: userId }, JWT_SECRET_KEY, { expiresIn: '1h' });
-
-				return await res.format({
-					json() {
-						res.send([
-							{
-								type: 'success',
-								message: 'Sign in successful!',
-								data: {
-									token: token
-								}
-							},
-						]);
-					},
-				});
+				let userDetails = await getUserIdAndAllDetails(userEmail, userPassword);
+				const token = jwt.sign({ id: userDetails.id }, JWT_SECRET_KEY, { expiresIn: '1h' });
+				return await responseWithStatus(res, 1, 202, "Sign in successful!", {
+					"user_details": userDetails,
+					"token": `${token}`
+				})
 			} else {
-				return await res.format({
-					json() {
-						res.send([
-							{
-								type: 'error',
-								message: "Credentials Don't match. Please try again.",
-								data: {
-									token: 'Invalid Token' 
-								}
-							},
-						]);
-					},
-				});
+				return await responseWithStatus(res, 0, 400, "Credentials Don't match. Please try again.", null)
 			}
 		}
 	} catch (error) {
@@ -185,25 +173,19 @@ export async function verifyUserToken(req, res) {
 	// #swagger.summary = 'Endpoint to allow the user to verify Bearer token. This is different from middleware confirmation.'
 	// #swagger.description = 'Use this if you want to verify authorization for access to something, or want to get the User's ID for fetching'
 
-	const token = req.header('Authorization').split(" ")[1]
+	if (!req.header('Authorization')) {
+		return responseWithStatus(res, 0, 401, "Unauthorized. Access Denied. Please login.")
+	} else {
+		const token = req.header('Authorization').split(" ")[1]
+		// if (!token) return res.status(401).send('Access Denied');
 
-	if (!token) return res.status(401).send('Access Denied');
-
-	try {
-		const verified = jwt.decode(token, JWT_SECRET_KEY);
-		console.log(verified)
-		const userId = verified.id;
-		res.status(200).json([
-			{
-				type: 'success',
-				message: 'Verified Token',
-				data: {
-					user_id: userId,
-				}
-			},
-		]);
-	} catch (err) {
-		res.status(400).send('Invalid Token. Please login. ' + err);
+		try {
+			const verified = jwt.decode(token, JWT_SECRET_KEY);
+			const userId = verified.id;
+			return await responseWithStatus(res, 1, 200, "Token Verified Successfully", { "user_id": `${userId}` })
+		} catch (err) {
+			return await responseWithStatus(res, 0, 400, "Invalid Token. Please login.", { "error_info": `${err}` })
+		}
 	}
 }
 

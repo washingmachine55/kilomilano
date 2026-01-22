@@ -45,9 +45,9 @@ const endpointsFiles = ["../server.js"]; // Point to your main application file 
 
 	// host: `localhost:${env.PORT || 3000}`,
 const doc = {
-	swagger: "3.1.0",
+	openapi: "3.1.0",
 	info: {
-		version: '1.0.0',
+		version: '1.0.1',
 		title: 'Kilomilano Makeup - API Documentation',
 		description: 'Documentation for the available API endpoints',
 	},
@@ -56,30 +56,51 @@ const doc = {
 	consumes: ['application/json'], 
 	produces: ['application/json'], 
 	components: {
+		securitySchemes: {
+			bearerAuth: {
+				type: "http",
+				scheme: "bearer",
+				bearerFormat: "JWT"
+			}
+		},
 		schemas: {
-			authSchema: {
+			registerSchema: {
 				data: {
 					$name: 'John Doe',
 					$email: 'example@example.com',
 					$password: 'secret_password',
-					$hashedPassword: 'secret_password'
+					$confirmed_password: 'secret_password'
 				}
-			}
+			},
+			loginSchema: {
+				data: {
+					$email: 'example@example.com',
+					$password: 'secret_password',
+				}
+			},
         }
 	},
+	security: [{
+		bearerAuth: []
+	}],
 	tags: [
 		{
 			name: 'Authentication',
 			description: 'User authentication and authorization endpoints'
 		},
+		{
+			name: 'Users',
+			description: 'User related endpoints'
+		},
 	]
 };
 
 const options = {
-	openapi: false,
+	openapi: '3.1.0',
 	autoHeaders: true,
 	autoQuery: true,
 	autoBody: true
 };
 
-swaggerAutogen(outputFile, endpointsFiles, doc, options);
+// swaggerAutogen({ openapi: '3.1.0' })(outputFile, endpointsFiles, doc, options);
+swaggerAutogen(options)(outputFile, endpointsFiles, doc);
