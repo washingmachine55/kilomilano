@@ -1,9 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { env, loadEnvFile } from 'node:process'
 import { responseWithStatus } from '../utils/RESPONSES.js';
-// import { unauthorizedResponse } from '../utils/RESPONSES.js';
 loadEnvFile();
-const JWT_SECRET_KEY = env.JWT_SECRET_KEY
 
 const verifyToken = (req, res, next) => {
 
@@ -12,10 +10,8 @@ const verifyToken = (req, res, next) => {
 	} else {
 		const token = req.header('Authorization').split(" ")[1]
 
-		// if (!token) return res.status(401).send('Access Denied');
-
 		try {
-			const verified = jwt.verify(token, JWT_SECRET_KEY);
+			const verified = jwt.verify(token, env.JWT_SECRET_KEY);
 			req.user = verified;
 			next();
 		} catch (err) {

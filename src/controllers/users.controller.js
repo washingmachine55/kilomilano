@@ -41,11 +41,26 @@ export async function getAllUsers(req, res) {
 
 export async function uploadUserProfilePicture(req, res) {
 	// #swagger.tags = ['Users']
-	// #swagger.summary = 'Endpoint to upload user's profile picture.'
-	// TODO Fix the upload picture issue
-	const result = await uploadUserProfilePictureToDB(5,req.file)
+	// #swagger.summary = "Endpoint to upload user's profile picture."
+	/* #swagger.requestBody = {
+		required: true,
+		content: {
+			"multipart/form-data": {
+				example: {
+					userProfilePicture: "Sample"
+				}
+			}
+		}
+	}
+	*/
+
+	if (!req.file) {
+		return await responseWithStatus(res, 0, 400, "No image uploaded. Please upload an image before trying again.", null)
+	}
+
+	const result = await uploadUserProfilePictureToDB(req.user.id, req.file)
 	try {
-		return await responseWithStatus(res, 1, 204, "Image uploaded successfully", result)
+		return await responseWithStatus(res, 1, 200, "Image uploaded successfully", result)
 	} catch (error) {
 		console.debug(error)
 	}

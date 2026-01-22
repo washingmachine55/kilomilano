@@ -8,46 +8,11 @@
  * @returns null
  */
 export async function responseWithStatus(res, type, statusCode, message, data) {
-	return await res.status(statusCode).json({
+	const resultData = !data ? [] : [data]
+	return await res.status(statusCode).type('json').json({
 		status: statusCode,
 		type: type,
 		message: message,
-		data: [data],
-	})
-} 
-
-export async function successResponse(res, type, statusCode, message, data) {
-	return await res.status(statusCode).json({
-		status: statusCode,
-		type: type,
-		message: message,
-		data: [data],
-	})
-} 
-
-export async function rejectedResponse(res, type, statusCode, message, data) {
-	return await res.status(statusCode).json({
-		status: statusCode,
-		type: type,
-		message: message,
-		data: [data],
-	})
-} 
-
-export async function unauthorizedResponse(res, type, statusCode, message, data) {
-	return await res.status(statusCode).json({
-		status: statusCode,
-		type: type,
-		message: message,
-		data: [data],
-	})
-} 
-
-export async function unavailableResponse(res, type, statusCode, message, data) {
-	return await res.status(statusCode).json({
-		status: statusCode,
-		type: type,
-		message: message,
-		data: [data],
+		data: resultData,
 	})
 } 

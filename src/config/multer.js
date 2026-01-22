@@ -1,19 +1,19 @@
 import multer from 'multer';
 import path from 'path';
-import * as fsAsync from 'fs/promises';
 import fs from 'fs';
 
-const imagesPath = path.dirname("../public/images/uploads")
+const imagesPath = path.dirname("./public/images/uploads")
+
 const uploadDir = path.join(imagesPath, 'uploads');
 
 if (!fs.existsSync(uploadDir)) {
-	await fsAsync.mkdir(uploadDir, { recursive: true });
+	fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 // Configure storage engine
 const storage = multer.diskStorage({
 	destination: function (req, file, cb) {
-		cb(null, imagesPath); // Specify the local destination folder
+		cb(null, uploadDir); // Specify the local destination folder
 	},
 	filename: function (req, file, cb) {
 		// Generate a unique filename by appending a timestamp and original extension
@@ -36,6 +36,8 @@ export const uploadImages = multer({
 			return cb(null, true);
 		}
 		cb(new Error('Error: File upload only supports the following filetypes - ' + filetypes));
+		// cb(responseWithStatus(req, 0, 415, `Incorrect format. File upload only supports the following filetypes - ${filetypes}`, null))
 	}
-}).single('file');
+});
+
 

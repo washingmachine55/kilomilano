@@ -22,6 +22,23 @@ export async function registerUser(req, res) {
 			schema: { $ref: "#/components/schemas/registerSchema" }  
 		} 
 	*/
+	/* #swagger.requestBody = {
+		required: true,
+		content: {
+			"application/json": {
+				example: {
+					data: {
+						name: 'John Doe',
+						email: 'example@example.com',
+						password: 'secret_password',
+						confirmed_password: 'secret_password'
+					}
+				}
+			}
+		}
+	}
+	*/
+
 
 	/*  #swagger.parameters['body'] = {
 		in: 'body',
@@ -29,7 +46,7 @@ export async function registerUser(req, res) {
 		required: true,
 		schema: {
 			data: {
-				name: 'John Doe',
+				$name: 'John Doe',
 				email: 'example@example.com',
 				password: 'secret_password',
 				confirmed_password: 'secret_password'
@@ -78,20 +95,6 @@ export async function registerUser(req, res) {
 				"token": token,
 			})
 
-			// return res.format({
-			// 	json() {
-			// 		res.send([
-			// 			{
-			// 				type: 'success',
-			// 				message: 'Registered Successfully!',
-			// 				data: {
-			// 					user_id: userRegistrationResult.id,
-			// 					token: token,
-			// 				}
-			// 			},
-			// 		]);
-			// 	},
-			// });
 		} catch (error) {
 			console.error('Error creating record:', error);
 		}
