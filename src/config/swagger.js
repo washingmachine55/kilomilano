@@ -1,41 +1,3 @@
-// import swaggerJSDoc from "swagger-jsdoc";
-// import swaggerUi from "swagger-ui-express";
-
-// const options = {
-// 	definition: {
-// 		openapi: "3.0.0",
-// 		info: {
-// 			title: "Campaigns In Node + PostgreSQL API",
-// 			version: "1.0.0",
-// 			description: "Campaigns System API Documentation",
-// 		},
-// 		// components: {
-// 		// 	securitySchemes: {
-// 		// 		BearerAuth: {
-// 		// 			type: "http",
-// 		// 			scheme: "bearer",
-// 		// 			bearerFormat: "JWT",
-// 		// 		},
-// 		// 	},
-// 		// },
-// 		security: [
-// 			{
-// 				BearerAuth: [],
-// 			},
-// 		],
-// 	},
-
-// 	// IMPORTANT — scan ALL js files
-// 	apis: ["../routes/*", "../server.js"],
-// };
-
-// export const swaggerSpec = swaggerJSDoc(options);
-
-// module.exports = (app, port) => {
-// 	app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-// 	console.log(`Swagger Docs running at http://localhost:${port}/api-docs`);
-// };
-
 import swaggerAutogen from 'swagger-autogen';
 import {env, loadEnvFile} from "process";
 loadEnvFile();
@@ -48,7 +10,7 @@ const doc = {
 	openapi: "3.1.0",
 	info: {
 		version: '1.0.1',
-		title: 'Kilomilano Makeup - API Documentation',
+		title: `${env.APP_NAME} - API Documentation`,
 		description: 'Documentation for the available API endpoints',
 	},
 	host: env.BASE_URL,
@@ -102,5 +64,4 @@ const options = {
 	autoBody: true
 };
 
-// swaggerAutogen({ openapi: '3.1.0' })(outputFile, endpointsFiles, doc, options);
 swaggerAutogen(options)(outputFile, endpointsFiles, doc);

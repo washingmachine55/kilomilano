@@ -47,8 +47,12 @@ app.use((req, res) => {
 	});
 });
 
+
 // ------------------------------------------------------------------------
 // App Initialization
-app.listen(env.APP_PORT, () => {
+const server = app.listen(env.APP_PORT, () => {
 	console.log(`${env.APP_NAME} listening on port ${env.APP_PORT}`)
 })
+
+server.keepAliveTimeout = Number(env.APP_KEEP_ALIVE_TIMEOUT);
+server.headersTimeout = Number(env.APP_HEADERS_TIMEOUT);
