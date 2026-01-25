@@ -1,4 +1,7 @@
-import { getUserId as getUserIdAndAllDetails, isCredentialsMatching } from '../services/auth/authenticateUser.auth.service.js';
+import {
+	getUserId as getUserIdAndAllDetails,
+	isCredentialsMatching,
+} from '../services/auth/authenticateUser.auth.service.js';
 import { checkExistingEmail } from '../services/auth/checkExistingEmail.auth.service.js';
 import registerUserToDatabase from '../services/auth/registerUser.auth.service.js';
 import { confirmPassword } from '../utils/confirmPassword.js';
@@ -8,9 +11,10 @@ import jwt from 'jsonwebtoken';
 // import { formatDate, formatDistance } from 'date-fns';
 // import { TZDate } from '@date-fns/tz';
 import { env, loadEnvFile } from 'node:process';
-loadEnvFile()
+loadEnvFile();
 import { responseWithStatus } from '../utils/RESPONSES.js';
 import { EMAIL_EXISTS_ALREADY, MISSING_INPUT_FIELDS, PASSWORDS_DONT_MATCH } from '../utils/CONSTANTS.js';
+import envLogger from '../utils/customLogger.js';
 
 // import { OAuth2Client } from 'google-auth-library';
 // export async function googleAuth(req, res) {
@@ -63,7 +67,6 @@ export async function registerUser(req, res) {
 	}
 	*/
 
-
 	/*  #swagger.parameters['body'] = {
 		in: 'body',
 		description: 'Some description...',
@@ -78,7 +81,6 @@ export async function registerUser(req, res) {
 		}
 	} */
 
-
 	let request = Object.values(req.body.data);
 	let userName = request[0];
 	let userEmail = request[1];
@@ -86,16 +88,15 @@ export async function registerUser(req, res) {
 	let userConfirmedPassword = request[3];
 
 	if (userName == null || userEmail == null || userPassword == null || userConfirmedPassword == null) {
-		return responseWithStatus(res, 0, 400, MISSING_INPUT_FIELDS)
+		return responseWithStatus(res, 0, 400, MISSING_INPUT_FIELDS);
 	} else {
-
 		// --------------------------------------------------------------------------- //
 		// Check if email exists in database already
 		// --------------------------------------------------------------------------- //
 		let existingEmailCheck = await checkExistingEmail(userEmail);
 
 		if (existingEmailCheck == true) {
-			return responseWithStatus(res, 0, 400, 'Error', EMAIL_EXISTS_ALREADY)
+			return responseWithStatus(res, 0, 400, 'Error', EMAIL_EXISTS_ALREADY);
 		}
 		// --------------------------------------------------------------------------- //
 		// Password Confirmation Check
@@ -103,7 +104,7 @@ export async function registerUser(req, res) {
 		let confirmPasswordCheck = confirmPassword(userPassword, userConfirmedPassword);
 
 		if (confirmPasswordCheck == false) {
-			return responseWithStatus(res, 0, 400, 'Error', PASSWORDS_DONT_MATCH)
+			return responseWithStatus(res, 0, 400, 'Error', PASSWORDS_DONT_MATCH);
 		}
 
 		// --------------------------------------------------------------------------- //
@@ -113,20 +114,19 @@ export async function registerUser(req, res) {
 		try {
 			const userRegistrationResult = await registerUserToDatabase(entryArray);
 			const accessToken = jwt.sign({ id: userRegistrationResult.id }, env.ACCESS_TOKEN_SECRET_KEY, {
-				expiresIn: `${env.ACCESS_TOKEN_EXPIRATION_TIME}MINS`
+				expiresIn: `${Number(env.ACCESS_TOKEN_EXPIRATION_TIME)}MINS`,
 			});
 			const refreshToken = jwt.sign({ id: userRegistrationResult.id }, env.REFRESH_TOKEN_SECRET_KEY, {
-				expiresIn: `${env.REFRESH_TOKEN_EXPIRATION_TIME}MINS`
+				expiresIn: `${Number(env.REFRESH_TOKEN_EXPIRATION_TIME)}MINS`,
 			});
 
-			return await responseWithStatus(res, 1, 201, "Sign Up successful!", {
-				"user_details": userRegistrationResult,
-				"access_token": accessToken,
-				"refresh_token": refreshToken,
-			})
-
+			return await responseWithStatus(res, 1, 201, 'Sign Up successful!', {
+				user_details: userRegistrationResult,
+				access_token: accessToken,
+				refresh_token: refreshToken,
+			});
 		} catch (error) {
-			console.error('Error creating record:', error);
+			envLogger('Error creating record:', error, res);
 		}
 	}
 }
@@ -164,7 +164,7 @@ export async function loginUser(req, res) {
 		let existingEmailCheck = await checkExistingEmail(userEmail);
 
 		if (existingEmailCheck == false) {
-			return await responseWithStatus(res, 0, 400, "Email doesn't exist. Please sign up instead", null)
+			return await responseWithStatus(res, 0, 400, "Email doesn't exist. Please sign up instead", null);
 		} else if (existingEmailCheck == true) {
 			// --------------------------------------------------------------------------- //
 			// Email and Password Combination Check
@@ -173,23 +173,23 @@ export async function loginUser(req, res) {
 			if (credentialMatchingResult == true) {
 				let userDetails = await getUserIdAndAllDetails(userEmail, userPassword);
 				const accessToken = jwt.sign({ id: userDetails.id }, env.ACCESS_TOKEN_SECRET_KEY, {
-					expiresIn: `${env.ACCESS_TOKEN_EXPIRATION_TIME}MINS`
+					expiresIn: `${Number(env.ACCESS_TOKEN_EXPIRATION_TIME)}MINS`,
 				});
 				const refreshToken = jwt.sign({ id: userDetails.id }, env.REFRESH_TOKEN_SECRET_KEY, {
-					expiresIn: `${env.REFRESH_TOKEN_EXPIRATION_TIME}MINS`
+					expiresIn: `${Number(env.REFRESH_TOKEN_EXPIRATION_TIME)}MINS`,
 				});
 
-				return await responseWithStatus(res, 1, 200, "Sign in successful!", {
-					"user_details": userDetails,
-					"access_token": `${accessToken}`,
-					"refresh_token": `${refreshToken}`
-				})
+				return await responseWithStatus(res, 1, 200, 'Sign in successful!', {
+					user_details: userDetails,
+					access_token: `${accessToken}`,
+					refresh_token: `${refreshToken}`,
+				});
 			} else {
-				return await responseWithStatus(res, 0, 401, "Credentials Don't match. Please try again.", null)
+				return await responseWithStatus(res, 0, 401, "Credentials Don't match. Please try again.", null);
 			}
 		}
 	} catch (error) {
-		console.error('Error creating record:', error);
+		envLogger('Error creating record:', error, res);
 	}
 }
 
@@ -214,17 +214,17 @@ export async function verifyUserToken(req, res) {
 	// #swagger.description = 'Use this if you want to verify authorization for access to something, or want to get the User's ID for fetching'
 
 	if (!req.header('Authorization')) {
-		return responseWithStatus(res, 0, 401, "Unauthorized. Access Denied. Please login.")
+		return responseWithStatus(res, 0, 401, 'Unauthorized. Access Denied. Please login.');
 	} else {
-		const token = req.header('Authorization').split(" ")[1]
+		const token = req.header('Authorization').split(' ')[1];
 		// if (!token) return res.status(401).send('Access Denied');
 
 		try {
 			const verified = jwt.decode(token, env.ACCESS_TOKEN_SECRET_KEY);
 			const userId = verified.id;
-			return await responseWithStatus(res, 1, 200, "Token Verified Successfully", { "user_id": `${userId}` })
+			return await responseWithStatus(res, 1, 200, 'Token Verified Successfully', { user_id: `${userId}` });
 		} catch (err) {
-			return await responseWithStatus(res, 0, 401, "Invalid Token. Please login.", { "error_info": `${err}` })
+			return await responseWithStatus(res, 0, 401, 'Invalid Token. Please login.', { error_info: `${err}` });
 		}
 	}
 }
@@ -235,31 +235,37 @@ export async function refreshToken(req, res) {
 	// #swagger.description = 'Use this in automation as once you detect a status code in the 400 range, you'll need to automatically hit this API'
 
 	if (req.header('Authorization')) {
-		const refreshToken = req.header('Authorization').split(" ")[1]
-		jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET_KEY,
-			(err, decoded) => {
-				if (err) {
-					return responseWithStatus(res, 0, 401, "Unauthorized. Invalid refresh token.", { "error": err })
-				}
-				else {
-					const accessToken = jwt.sign({
+		const refreshToken = req.header('Authorization').split(' ')[1];
+		jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET_KEY, (err, decoded) => {
+			if (err) {
+				return responseWithStatus(res, 0, 401, 'Unauthorized. Invalid refresh token.', { error: err });
+			} else {
+				const accessToken = jwt.sign(
+					{
 						id: decoded.id,
-					}, env.ACCESS_TOKEN_SECRET_KEY, {
-						expiresIn: `${env.ACCESS_TOKEN_EXPIRATION_TIME}MINS`
-					});
-					const refreshToken = jwt.sign({
+					},
+					env.ACCESS_TOKEN_SECRET_KEY,
+					{
+						expiresIn: `${Number(env.ACCESS_TOKEN_EXPIRATION_TIME)}MINS`,
+					}
+				);
+				const refreshToken = jwt.sign(
+					{
 						id: decoded.id,
-					}, env.REFRESH_TOKEN_SECRET_KEY, {
-						expiresIn: `${env.REFRESH_TOKEN_EXPIRATION_TIME}MINS`
-					});
-					return responseWithStatus(res, 1, 201, "Tokens refreshed successfully", {
-						access_token: accessToken,
-						refresh_token: refreshToken
-					})
-				}
-			})
+					},
+					env.REFRESH_TOKEN_SECRET_KEY,
+					{
+						expiresIn: `${Number(env.REFRESH_TOKEN_EXPIRATION_TIME)}MINS`,
+					}
+				);
+				return responseWithStatus(res, 1, 201, 'Tokens refreshed successfully', {
+					access_token: accessToken,
+					refresh_token: refreshToken,
+				});
+			}
+		});
 	} else {
-		return responseWithStatus(res, 0, 401, "Unauthorized. Invalid token.")
+		return responseWithStatus(res, 0, 401, 'Unauthorized. Invalid token.');
 	}
 }
 

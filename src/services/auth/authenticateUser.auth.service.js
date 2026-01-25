@@ -1,17 +1,24 @@
-import pool from "../../config/db.js";
-import bcrypt from "bcryptjs";
+import pool from '../../config/db.js';
+import bcrypt from 'bcryptjs';
+import envLogger from '../../utils/customLogger.js';
 
 export async function isCredentialsMatching(userEmail, userPassword) {
 	const conn = await pool.connect();
 
 	try {
-		const credentialsCheck = await conn.query("SELECT CASE WHEN EXISTS(SELECT email FROM tbl_users WHERE email = $1) THEN 1 ELSE 0 END AS ExistsCheck;", [userEmail]);
+		const credentialsCheck = await conn.query(
+			'SELECT CASE WHEN EXISTS(SELECT email FROM tbl_users WHERE email = $1) THEN 1 ELSE 0 END AS ExistsCheck;',
+			[userEmail]
+		);
 
 		let result = credentialsCheck.rows[0].existscheck.toString();
 
 		try {
 			if (result == 1) {
-				const getHashedPasswordFromDB = await conn.query("SELECT password_hash FROM tbl_users WHERE email = $1;", [userEmail]);
+				const getHashedPasswordFromDB = await conn.query(
+					'SELECT password_hash FROM tbl_users WHERE email = $1;',
+					[userEmail]
+				);
 
 				const hashedPasswordFromDB = Object.values(getHashedPasswordFromDB.rows[0])[0];
 				const bcryptResult = await bcrypt.compare(userPassword, hashedPasswordFromDB);
@@ -25,13 +32,12 @@ export async function isCredentialsMatching(userEmail, userPassword) {
 				return false;
 			}
 		} catch (error) {
-			console.log(error);
+			envLogger('An error occured', error);
 		}
-
 	} catch (err) {
-		console.error("Error creating record:", err)
+		envLogger('Error creating record:', err);
 	} finally {
-		conn.release()
+		conn.release();
 	}
 }
 
@@ -39,20 +45,29 @@ export async function getUserId(userEmail, userPassword) {
 	const conn = await pool.connect();
 
 	try {
-		const credentialsCheck = await conn.query("SELECT CASE WHEN EXISTS(SELECT email FROM tbl_users WHERE email = $1) THEN 1 ELSE 0 END AS ExistsCheck;", [userEmail]);
+		const credentialsCheck = await conn.query(
+			'SELECT CASE WHEN EXISTS(SELECT email FROM tbl_users WHERE email = $1) THEN 1 ELSE 0 END AS ExistsCheck;',
+			[userEmail]
+		);
 
 		let result = credentialsCheck.rows[0].existscheck.toString();
 
 		try {
 			if (result == 1) {
-				const getHashedPasswordFromDB = await conn.query("SELECT password_hash FROM tbl_users WHERE email = $1;", [userEmail]);
+				const getHashedPasswordFromDB = await conn.query(
+					'SELECT password_hash FROM tbl_users WHERE email = $1;',
+					[userEmail]
+				);
 				const hashedPasswordFromDB = Object.values(getHashedPasswordFromDB.rows[0])[0];
 				const bcryptResult = await bcrypt.compare(userPassword, hashedPasswordFromDB);
 
 				if (bcryptResult == true) {
 					// const credentialsCheck = await conn.query("SELECT id FROM tbl_users WHERE email = $1;", [userEmail]);
-					const credentialsCheck = await conn.query("SELECT u.id, u.email, u.access_type, u.created_at, ud.first_name, ud.last_name, ud.profile_pic_url from tbl_users u JOIN tbl_users_details ud ON ud.users_id = u.id WHERE u.email = $1;", [userEmail]);
-					let result = credentialsCheck.rows[0]
+					const credentialsCheck = await conn.query(
+						'SELECT u.id, u.email, u.access_type, u.created_at, ud.first_name, ud.last_name, ud.profile_pic_url from tbl_users u JOIN tbl_users_details ud ON ud.users_id = u.id WHERE u.email = $1;',
+						[userEmail]
+					);
+					let result = credentialsCheck.rows[0];
 					return result;
 				} else {
 					return false;
@@ -61,11 +76,11 @@ export async function getUserId(userEmail, userPassword) {
 				return false;
 			}
 		} catch (error) {
-			console.log(error);
+			envLogger('An error occured', error);
 		}
 	} catch (err) {
-		console.error("Error creating record:", err)
+		envLogger('Error creating record:', err);
 	} finally {
-		conn.release()
+		conn.release();
 	}
 }

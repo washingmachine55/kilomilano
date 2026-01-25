@@ -1,16 +1,18 @@
-import pool from "../../config/db.js";
+import pool from '../../config/db.js';
 
 export async function getSingleUserDetails(userId) {
 	const conn = await pool.connect();
 
 	try {
-		const result = await conn.query("SELECT u.id, u.email, u.access_type, u.created_at, ud.first_name, ud.last_name, ud.profile_pic_url from tbl_users u JOIN tbl_users_details ud ON ud.users_id = u.id WHERE u.id = $1;", [userId]);
+		const result = await conn.query(
+			'SELECT u.id, u.email, u.access_type, u.created_at, ud.first_name, ud.last_name, ud.profile_pic_url from tbl_users u JOIN tbl_users_details ud ON ud.users_id = u.id WHERE u.id = $1;',
+			[userId]
+		);
 
-		return result.rows[0]
-
+		return result.rows[0];
 	} catch (err) {
-		console.error("Error creating record:", err)
+		console.error('Error creating record:', err);
 	} finally {
-		conn.release()
+		conn.release();
 	}
 }

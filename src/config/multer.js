@@ -2,9 +2,9 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { env, loadEnvFile } from 'process';
-loadEnvFile()
+loadEnvFile();
 
-const imagesPath = path.dirname("./public/images/uploads")
+const imagesPath = path.dirname('./public/images/uploads');
 
 const uploadDir = path.join(imagesPath, 'uploads');
 
@@ -19,9 +19,9 @@ const storage = multer.diskStorage({
 	},
 	filename: function (req, file, cb) {
 		// Generate a unique filename by appending a timestamp and original extension
-		const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+		const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
 		cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-	}
+	},
 });
 
 // Initialize upload middleware with configuration
@@ -39,7 +39,5 @@ export const uploadImages = multer({
 		}
 		cb(new Error('Error: File upload only supports the following filetypes - ' + filetypes));
 		// cb(responseWithStatus(req, 0, 415, `Incorrect format. File upload only supports the following filetypes - ${filetypes}`, null))
-	}
+	},
 });
-
-

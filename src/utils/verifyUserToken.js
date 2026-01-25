@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import env from 'node:process';
-const ACCESS_TOKEN_SECRET_KEY = env.ACCESS_TOKEN_SECRET_KEY
+const ACCESS_TOKEN_SECRET_KEY = env.ACCESS_TOKEN_SECRET_KEY;
 
 export function verifyUserToken(req, res) {
 	const token = req.header('Authorization');
@@ -15,4 +15,3 @@ export function verifyUserToken(req, res) {
 		res.status(400).send('Invalid Token. Please login.' + err);
 	}
 }
-

@@ -1,9 +1,8 @@
-import z from "zod";
-import { authLoginSchema, authRegisterSchema } from "../utils/schema.validations.js";
-import { responseWithStatus } from "../utils/RESPONSES.js";
+import z from 'zod';
+import { authLoginSchema, authRegisterSchema } from '../utils/schema.validations.js';
+import { responseWithStatus } from '../utils/RESPONSES.js';
 
 export async function verifyInputFields(req, res, next) {
-
 	let reqData;
 	if (req.path == '/register') {
 		reqData = await authRegisterSchema.safeParseAsync(req.body.data);
@@ -12,10 +11,10 @@ export async function verifyInputFields(req, res, next) {
 	}
 
 	if (!reqData.success) {
-		return await responseWithStatus(res, 0, 400, "Validation Error. Please try again.", {
+		return await responseWithStatus(res, 0, 400, 'Validation Error. Please try again.', {
 			errors: z.flattenError(reqData.error).fieldErrors,
-		})
+		});
 	} else {
-		next()
+		next();
 	}
 }

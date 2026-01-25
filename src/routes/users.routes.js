@@ -6,6 +6,11 @@ const router = express.Router();
 
 router.get('/profile', verifyToken, getSingleUser);
 router.get('/', verifyToken, getAllUsers);
-router.post('/profile-picture-upload', verifyToken, uploadImages.single('userProfilePicture'), uploadUserProfilePicture);
+router.post(
+	'/profile-picture-upload',
+	verifyToken,
+	uploadImages.single('userProfilePicture'),
+	uploadUserProfilePicture
+);
 
 export default router;

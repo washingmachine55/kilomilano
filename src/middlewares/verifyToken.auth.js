@@ -1,14 +1,13 @@
 import jwt from 'jsonwebtoken';
-import { env, loadEnvFile } from 'node:process'
+import { env, loadEnvFile } from 'node:process';
 import { responseWithStatus } from '../utils/RESPONSES.js';
 loadEnvFile();
 
 const verifyToken = (req, res, next) => {
-
 	if (!req.header('Authorization')) {
-		return responseWithStatus(res, 0, 401, "Unauthorized. Access Denied. Please login.")
+		return responseWithStatus(res, 0, 401, 'Unauthorized. Access Denied. Please login.');
 	} else {
-		const token = req.header('Authorization').split(" ")[1]
+		const token = req.header('Authorization').split(' ')[1];
 
 		try {
 			const verified = jwt.verify(token, env.ACCESS_TOKEN_SECRET_KEY);
@@ -16,9 +15,9 @@ const verifyToken = (req, res, next) => {
 			next();
 		} catch (err) {
 			// unauthorizedResponse(res, 400, "Invalid Token. Please login" + err, [])
-			return responseWithStatus(res, 0, 400, "Invalid Token. Please login.", {
-				"errors": err
-			})
+			return responseWithStatus(res, 0, 400, 'Invalid Token. Please login.', {
+				errors: err,
+			});
 		}
 	}
 };
