@@ -1,6 +1,6 @@
 // import request from 'supertest';
 import pactum from 'pactum';
-import app from '../src/server.js';
+// import app from '../src/server.js';
 
 process.loadEnvFile();
 pactum.request.setBaseUrl(process.env.APP_URL);
@@ -109,7 +109,8 @@ describe('Authentication APIs', () => {
 					}
 				`
 				)
-				.stores('refreshToken', 'data[0].refresh_token');
+				// .stores('refreshToken', 'data[0].refresh_token'); // old method to retrieve it
+				.stores('refreshToken', 'data.refresh_token');
 
 			await pactum
 				.spec()
@@ -139,7 +140,7 @@ describe('Authentication APIs', () => {
 					}
 				`
 				)
-				.stores('accessToken', 'data[0].access_token');
+				.stores('accessToken', 'data.access_token');
 
 			await pactum
 				.spec()
@@ -167,7 +168,7 @@ describe('Authentication APIs', () => {
 					}
 				`
 				)
-				.stores('refreshToken', 'data[0].refresh_token');
+				.stores('refreshToken', 'data.refresh_token');
 
 			await pactum
 				.spec()

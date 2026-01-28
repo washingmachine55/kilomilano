@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS tbl_users(
 	email VARCHAR(80) UNIQUE,
 	password_hash VARCHAR(70) NOT NULL,
 	access_type SMALLINT DEFAULT 0,
+	provider_name VARCHAR(50) UNIQUE DEFAULT NULL,
+	callback_url TEXT DEFAULT NULL,
 	created_by UUID DEFAULT NULL,
 	created_at TIMESTAMP DEFAULT NOW(),
 	updated_by UUID DEFAULT NULL,
@@ -14,6 +16,15 @@ CREATE TABLE IF NOT EXISTS tbl_users(
 	FOREIGN KEY (created_by) REFERENCES tbl_users(id),
 	FOREIGN KEY (updated_by) REFERENCES tbl_users(id),
 	FOREIGN KEY (deleted_by) REFERENCES tbl_users(id)
+);
+
+CREATE TABLE IF NOT EXISTS tbl_users_otp(
+	id UUID PRIMARY KEY DEFAULT UUIDv7(),
+	users_id UUID NOT NULL,
+	otp_value CHAR(6) NOT NULL CHECK (otp_value ~ '^[0-9]{6}$'),
+	date_sent TIMESTAMP NOT NULL,
+	date_expiration TIMESTAMP NOT NULL,
+	FOREIGN KEY (users_id) REFERENCES tbl_users(id)
 );
 
 CREATE TABLE IF NOT EXISTS tbl_images(
@@ -33,8 +44,13 @@ CREATE TABLE IF NOT EXISTS tbl_images(
 
 CREATE TABLE IF NOT EXISTS tbl_addresses(
 	id UUID PRIMARY KEY DEFAULT UUIDv7(),
-	address_name VARCHAR(10) NOT NULL,
-	address_details VARCHAR(510) NOT NULL,
+	address_name VARCHAR(10) DEFAULT NULL,
+	street_num VARCHAR(8) DEFAULT NULL,
+	street_addr VARCHAR(100) DEFAULT NULL,
+	street_addr_line_2 VARCHAR(100) DEFAULT NULL,
+	city VARCHAR(10) DEFAULT NULL,
+	region VARCHAR(10) DEFAULT NULL,
+	zip_code CHAR(5) DEFAULT NULL,
 	created_by UUID DEFAULT NULL,
 	created_at TIMESTAMP DEFAULT NOW(),
 	updated_by UUID DEFAULT NULL,
@@ -87,25 +103,6 @@ CREATE TABLE IF NOT EXISTS tbl_users_details(
 	FOREIGN KEY (deleted_by) REFERENCES tbl_users(id)
 );
 
-CREATE TABLE IF NOT EXISTS tbl_auth_providers(
-	id UUID PRIMARY KEY DEFAULT UUIDv7(),
-	users_id UUID NOT NULL,
-	provider VARCHAR(50) NOT NULL,
-	provider_id VARCHAR(255) NOT NULL,
-	callback_url TEXT NOT NULL,
-	created_by UUID DEFAULT NULL,
-	created_at TIMESTAMP DEFAULT NOW(),
-	updated_by UUID DEFAULT NULL,
-	updated_at TIMESTAMP DEFAULT NULL,
-	deleted_by UUID DEFAULT NULL,
-	deleted_at TIMESTAMP DEFAULT NULL,
-	status SMALLINT DEFAULT 0,
-	FOREIGN KEY (users_id) REFERENCES tbl_users(id),
-	FOREIGN KEY (created_by) REFERENCES tbl_users(id),
-	FOREIGN KEY (updated_by) REFERENCES tbl_users(id),
-	FOREIGN KEY (deleted_by) REFERENCES tbl_users(id)
-);
-
 CREATE TABLE IF NOT EXISTS tbl_companies(
 	id UUID PRIMARY KEY DEFAULT UUIDv7(),
 	name VARCHAR(355) UNIQUE NOT NULL,
@@ -136,14 +133,22 @@ CREATE TABLE IF NOT EXISTS tbl_categories(
 	FOREIGN KEY (deleted_by) REFERENCES tbl_users(id)
 );
 
+CREATE TABLE IF NOT EXISTS tbl_attributes(
+	id UUID PRIMARY KEY DEFAULT UUIDv7(),
+	name VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS tbl_attributes_values(
+	id UUID PRIMARY KEY DEFAULT UUIDv7(),
+	name VARCHAR(255) UNIQUE NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS tbl_products(
 	id UUID PRIMARY KEY DEFAULT UUIDv7(),
 	name VARCHAR(255) NOT NULL,
 	companies_id UUID NOT NULL,
 	categories_id UUID NOT NULL,
 	rating SMALLINT CHECK (rating >= 1 AND rating <= 5) DEFAULT 5,
-	images_id UUID DEFAULT NULL,
-	price DECIMAL(6,2) NOT NULL,
 	details TEXT NOT NULL,
 	ingredients TEXT NOT NULL,
 	instructions TEXT NOT NULL,
@@ -154,7 +159,6 @@ CREATE TABLE IF NOT EXISTS tbl_products(
 	deleted_by UUID DEFAULT NULL,
 	deleted_at TIMESTAMP DEFAULT NULL,
 	status SMALLINT DEFAULT 0,
-	FOREIGN KEY (images_id) REFERENCES tbl_images(id),
 	FOREIGN KEY (companies_id) REFERENCES tbl_companies(id),
 	FOREIGN KEY (categories_id) REFERENCES tbl_categories(id),
 	FOREIGN KEY (created_by) REFERENCES tbl_users(id),
@@ -165,8 +169,14 @@ CREATE TABLE IF NOT EXISTS tbl_products(
 CREATE TABLE IF NOT EXISTS tbl_products_variants(
 	id UUID PRIMARY KEY DEFAULT UUIDv7(),
 	products_id UUID NOT NULL,
-	color_code CHAR(6) NOT NULL,
+	main BOOLEAN NOT NULL DEFAULT FALSE,
+	name VARCHAR(255) DEFAULT NULL,
 	images_id UUID NOT NULL,
+	sku CHAR(8) UNIQUE NOT NULL,
+	quantity_stock NUMERIC(1,0) NOT NULL,
+	price_cost DECIMAL(6,2) NOT NULL,
+	price_retail DECIMAL(6,2) NOT NULL,
+	addresses_id UUID DEFAULT NULL,
 	created_by UUID DEFAULT NULL,
 	created_at TIMESTAMP DEFAULT NOW(),
 	updated_by UUID DEFAULT NULL,
@@ -176,30 +186,18 @@ CREATE TABLE IF NOT EXISTS tbl_products_variants(
 	status SMALLINT DEFAULT 0,
 	FOREIGN KEY (products_id) REFERENCES tbl_products(id),
 	FOREIGN KEY (images_id) REFERENCES tbl_images(id),
+	FOREIGN KEY (addresses_id) REFERENCES tbl_addresses(id),
 	FOREIGN KEY (created_by) REFERENCES tbl_users(id),
 	FOREIGN KEY (updated_by) REFERENCES tbl_users(id),
 	FOREIGN KEY (deleted_by) REFERENCES tbl_users(id)
 );
 
-CREATE TABLE IF NOT EXISTS tbl_products_variants_stocks(
-	id UUID PRIMARY KEY DEFAULT UUIDv7(),
-	sku CHAR(8) UNIQUE NOT NULL,
+CREATE TABLE IF NOT EXISTS tbl_products_variants_attributes_values(
 	products_variants_id UUID NOT NULL,
-	qty SMALLINT,
-	price DECIMAL(6,2) NOT NULL,
-	addresses_id UUID NOT NULL,
-	created_by UUID DEFAULT NULL,
-	created_at TIMESTAMP DEFAULT NOW(),
-	updated_by UUID DEFAULT NULL,
-	updated_at TIMESTAMP DEFAULT NULL,
-	deleted_by UUID DEFAULT NULL,
-	deleted_at TIMESTAMP DEFAULT NULL,
-	status SMALLINT DEFAULT 0,
+	attributes_values_id UUID NOT NULL,
+	PRIMARY KEY (products_variants_id, attributes_values_id),
 	FOREIGN KEY (products_variants_id) REFERENCES tbl_products_variants(id),
-	FOREIGN KEY (addresses_id) REFERENCES tbl_addresses(id),
-	FOREIGN KEY (created_by) REFERENCES tbl_users(id),
-	FOREIGN KEY (updated_by) REFERENCES tbl_users(id),
-	FOREIGN KEY (deleted_by) REFERENCES tbl_users(id)
+	FOREIGN KEY (attributes_values_id) REFERENCES tbl_attributes_values(id)
 );
 
 CREATE TABLE IF NOT EXISTS tbl_tags(
@@ -217,7 +215,7 @@ CREATE TABLE IF NOT EXISTS tbl_tags(
 	FOREIGN KEY (deleted_by) REFERENCES tbl_users(id)
 );
 
-CREATE TABLE IF NOT EXISTS tbl_products_tags_bridge(
+CREATE TABLE IF NOT EXISTS tbl_products_tags(
 	products_id UUID NOT NULL,
 	tags_id UUID NOT NULL,
 	PRIMARY KEY (products_id, tags_id),
@@ -246,10 +244,11 @@ CREATE TABLE IF NOT EXISTS tbl_orders(
 	FOREIGN KEY (deleted_by) REFERENCES tbl_users(id)
 );
 
-CREATE TABLE IF NOT EXISTS tbl_orders_products_bridge(
+CREATE TABLE IF NOT EXISTS tbl_orders_products(
 	id UUID PRIMARY KEY DEFAULT UUIDv7(),
 	orders_id UUID NOT NULL,
 	products_variants_id UUID NOT NULL,
+	quantity NUMERIC(2,0) CHECK (quantity > 0 AND quantity < 20),
 	comments TEXT DEFAULT NULL,
 	created_by UUID DEFAULT NULL,
 	created_at TIMESTAMP DEFAULT NOW(),
@@ -265,7 +264,7 @@ CREATE TABLE IF NOT EXISTS tbl_orders_products_bridge(
 	FOREIGN KEY (deleted_by) REFERENCES tbl_users(id)
 );
 
-CREATE TABLE IF NOT EXISTS tbl_users_products_favourites(
+CREATE TABLE IF NOT EXISTS tbl_users_products_favorites(
 	id UUID PRIMARY KEY DEFAULT UUIDv7(),
 	users_id UUID NOT NULL,
 	products_id UUID UNIQUE NOT NULL,
@@ -283,7 +282,7 @@ CREATE TABLE IF NOT EXISTS tbl_users_products_favourites(
 	FOREIGN KEY (deleted_by) REFERENCES tbl_users(id)
 );
 
-CREATE TABLE IF NOT EXISTS tbl_notificatons(
+CREATE TABLE IF NOT EXISTS tbl_notifications(
 	id UUID PRIMARY KEY DEFAULT UUIDv7(),
 	title VARCHAR(60) NOT NULL,
 	description VARCHAR(255) NOT NULL,
@@ -301,7 +300,6 @@ CREATE TABLE IF NOT EXISTS tbl_notificatons(
 	FOREIGN KEY (updated_by) REFERENCES tbl_users(id),
 	FOREIGN KEY (deleted_by) REFERENCES tbl_users(id)
 );
-
 
 CREATE TABLE IF NOT EXISTS tbl_payments_providers(
 	id UUID PRIMARY KEY DEFAULT UUIDv7(),
@@ -324,6 +322,7 @@ CREATE TABLE IF NOT EXISTS tbl_payments(
 	orders_id UUID NOT NULL,
 	amount DECIMAL(6,2) NOT NULL,
 	payments_providers_id UUID NOT NULL,
+	providers_transaction_id VARCHAR(1000) DEFAULT NULL,
 	payment_method SMALLINT DEFAULT 0,
 	payment_status SMALLINT DEFAULT 0,
 	created_by UUID DEFAULT NULL,
@@ -360,3 +359,7 @@ CREATE TABLE IF NOT EXISTS tbl_shipments(
 	FOREIGN KEY (updated_by) REFERENCES tbl_users(id),
 	FOREIGN KEY (deleted_by) REFERENCES tbl_users(id)
 );
+
+CREATE UNIQUE INDEX one_main_per_product
+ON tbl_products_variants (products_id, main)
+WHERE main = TRUE;

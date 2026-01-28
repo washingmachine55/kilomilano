@@ -1,6 +1,6 @@
 // import request from 'supertest';
 import pactum from 'pactum';
-import app from '../src/server.js';
+// import app from '../src/server.js';
 
 process.loadEnvFile();
 pactum.request.setBaseUrl(process.env.APP_URL);

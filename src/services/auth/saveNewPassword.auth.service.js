@@ -11,13 +11,18 @@ export default async function saveNewUserPasswordToDB(userEmail, userPassword) {
 		await conn.query('UPDATE tbl_users SET password_hash = $1 WHERE email = $2 RETURNING id', [hashedPassword, userEmail]);
 
 		const userDetails = await conn.query(
-			'SELECT u.id, u.email, u.access_type, u.created_at, ud.first_name, ud.last_name, ud.profile_pic_url from tbl_users u JOIN tbl_users_details ud ON ud.users_id = u.id WHERE u.email = $1;',
+			`
+			SELECT u.id, u.email, u.access_type, u.created_at, ud.first_name, ud.last_name, i.image_url 
+			FROM tbl_users u 
+			JOIN tbl_users_details ud ON ud.users_id = u.id
+			FULL JOIN tbl_images i ON ud.images_id = i.id
+			WHERE u.email = $1;`,
 			[userEmail]
 		);
 
 		return userDetails.rows[0];
 	} catch (err) {
-		console.error('Error creating record:', err);
+		console.error('Error resetting password for the record in request', err);
 	} finally {
 		conn.release();
 	}
