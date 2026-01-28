@@ -48,8 +48,8 @@ CREATE TABLE IF NOT EXISTS tbl_addresses(
 	street_num VARCHAR(8) DEFAULT NULL,
 	street_addr VARCHAR(100) DEFAULT NULL,
 	street_addr_line_2 VARCHAR(100) DEFAULT NULL,
-	city VARCHAR(10) DEFAULT NULL,
-	region VARCHAR(10) DEFAULT NULL,
+city VARCHAR(35) DEFAULT NULL,
+	region VARCHAR(25) DEFAULT NULL,
 	zip_code CHAR(5) DEFAULT NULL,
 	created_by UUID DEFAULT NULL,
 	created_at TIMESTAMP DEFAULT NOW(),
@@ -135,12 +135,14 @@ CREATE TABLE IF NOT EXISTS tbl_categories(
 
 CREATE TABLE IF NOT EXISTS tbl_attributes(
 	id UUID PRIMARY KEY DEFAULT UUIDv7(),
-	name VARCHAR(255) UNIQUE NOT NULL
+name VARCHAR(25) UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tbl_attributes_values(
 	id UUID PRIMARY KEY DEFAULT UUIDv7(),
-	name VARCHAR(255) UNIQUE NOT NULL
+attributes_id UUID NOT NULL,
+	name VARCHAR(25) UNIQUE NOT NULL,
+FOREIGN KEY (attributes_id) REFERENCES tbl_attributes(id)
 );
 
 CREATE TABLE IF NOT EXISTS tbl_products(
@@ -360,6 +362,12 @@ CREATE TABLE IF NOT EXISTS tbl_shipments(
 	FOREIGN KEY (deleted_by) REFERENCES tbl_users(id)
 );
 
-CREATE UNIQUE INDEX one_main_per_product
+CREATE UNIQUE INDEX IF NOT EXISTS one_main_per_product
 ON tbl_products_variants (products_id, main)
 WHERE main = TRUE;
+-- INSERT INTO tbl_categories(name)
+-- VALUES ('FACE'), ('HAIR'), ('SKIN'), ('BODY');
+-- INSERT INTO tbl_tags(name)
+-- VALUES ('Cruelty Free'), ('Paraben Free'), ('Vegan'), ('Suitable for Sensetive Skin'), ('Dermatologist Tested');
+-- INSERT INTO tbl_attributes(name)
+-- VALUES ('Color Code');
