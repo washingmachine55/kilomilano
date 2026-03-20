@@ -1,12 +1,13 @@
-import { getAllProductsDetails } from '@services/products/getAll.products.service.js';
-import { getAllProductsVariants } from '@services/products/getAllVariants.products.service.js';
-import { attempt, NotFoundError } from '@utils/errors.js';
-import { responseWithStatus } from '@utils/responses.js';
+import { getAllProductsDetails } from '#/services/products/getAll.products.service.js';
+import { getAllProductsVariants } from '#/services/products/getAllVariants.products.service.js';
+import { attempt, NotFoundError } from '#/utils/errors.js';
+import { responseWithStatus } from '#/utils/responses.js';
 import type { NextFunction, Response, Request } from 'express';
 
 export const getAllProducts = attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	if (req.query.category !== undefined) {
-		const result = await getAllProductsDetails(req.query['category']);
+		const userQuery: string = req.query.category.toString();
+		const result = await getAllProductsDetails(userQuery);
 		if (!result) {
 			await responseWithStatus(res, 1, 404, 'That category does not exist.');
 		} else {

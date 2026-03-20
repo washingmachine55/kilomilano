@@ -9,7 +9,7 @@ import { type Response } from 'express';
  * @param {object} data - contains the response data as well as nested objects as required.
  * @returns null
  */
-export async function responseWithStatus(
+export function responseWithStatus(
 	res: Response,
 	type: number,
 	statusCode: number,

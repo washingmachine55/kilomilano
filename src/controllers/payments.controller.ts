@@ -36,15 +36,17 @@ export const createPayment = attempt(async (req: Request, res: Response, _next: 
 	});
 });
 
-export const handlePaymentIntentSucceeded = attempt(async (paymentIntent) => {
+// export const handlePaymentIntentSucceeded = attempt(async (paymentIntent) => {
+export async function handlePaymentIntentSucceeded(paymentIntent) {
 	// WIP
 	// some logic that processes the confirmed paymentIntent
 	console.log('handlePaymentIntentSucceeded was triggered!');
 	console.log(paymentIntent);
-});
+};
 
-export const handlePaymentMethodAttached = attempt(async (paymentMethod) => {
+export async function handlePaymentMethodAttached(paymentMethod: any) {
 	// WIP
 	// some logic that processes the confirmed paymentMethod
+	console.log('handlePaymentMethodAttached was triggered!');
 	console.log(paymentMethod);
-});
+};

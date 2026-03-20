@@ -6,4 +6,6 @@ RUN npm install
 COPY . /app/
 
 # CMD [ "tsx", "--env-file=.env", "--no-deprecation", "watch", "src/server.js" ]
-CMD [ "npx", "tsx", "watch", "src/server.js" ]
+# CMD [ "npx", "tsx", "watch", "src/server.js" ]
+# CMD [ "npx", "tsup", "src/server.ts", "--format", "esm", "--watch", '--onSuccess "nodemon dist/server.js"']
+CMD [ "npm", "run", "ts-dev" ]

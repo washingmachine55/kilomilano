@@ -20,7 +20,7 @@ import {
 	TEMPORARY_TOKEN_EXPIRATION_TIME,
 } from '../config/env-config';
 
-export const registerUser = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const registerUser = attempt(async (req: Request, res: Response, next?: NextFunction) => {
 	const request: string[] = Object.values(req.body.data);
 	const userName: string = request[0]!;
 	const userEmail: string = request[1]!;
@@ -29,7 +29,11 @@ export const registerUser = attempt(async (req: Request, res: Response, _next: N
 	// --------------------------------------------------------------------------- //
 	// Check if email exists in database already
 	// --------------------------------------------------------------------------- //
+	console.log('before response');
+	console.log(await checkExistingEmail_v2(userEmail));
+
 	const existingEmailCheck = await checkExistingEmail_v2(userEmail);
+	console.log('after response');
 	if (existingEmailCheck === true) {
 		throw new ForbiddenError(
 			'Cant register user as user email already exists. Please sign in instead',
@@ -48,7 +52,7 @@ export const registerUser = attempt(async (req: Request, res: Response, _next: N
 			expiresIn: `${Number(REFRESH_TOKEN_EXPIRATION_TIME)}MINS`,
 		});
 
-		await responseWithStatus(res, 1, 201, 'Sign Up successful!', {
+		return responseWithStatus(res, 1, 201, 'Sign Up successful!', {
 			user_details: userRegistrationResult,
 			access_token: accessToken,
 			refresh_token: refreshToken,
@@ -90,17 +94,20 @@ export const loginUser = attempt(async (req: Request, res: Response, _next: Next
 	}
 });
 
+interface Veri {
+	id: string;
+}
+
 export const verifyUserToken = attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	if (!req.header('Authorization')) {
 		responseWithStatus(res, 0, 401, 'Unauthorized. Access Denied. Please login.');
 	} else {
 		const token: string = req.header('Authorization')!.split(' ')[1] || '';
 		try {
-			const [verified, verifiedErr] = await trialCapture(verifyJwtAsync(token, ACCESS_TOKEN_SECRET_KEY));
-			if (verifiedErr) {
-				throw new UnauthorizedError('Unable to verify JWT. Please login or register.');
-			}
-			responseWithStatus(res, 1, 200, 'Token Verified Successfully', { user_id: `${verified.id}` });
+			const verified: Promise<Veri> = (verifyJwtAsync(token, ACCESS_TOKEN_SECRET_KEY).catch((err)=>{
+				throw new UnauthorizedError('Unable to verify JWT. Please login or register.', {cause: err});
+			}));
+			responseWithStatus(res, 1, 200, 'Token Verified Successfully', { user_id: `${(await verified).id}` });
 		} catch (err) {
 			responseWithStatus(res, 0, 401, 'Invalid Token. Please login.', { error_info: `${err}` });
 		}
@@ -109,11 +116,10 @@ export const verifyUserToken = attempt(async (req: Request, res: Response, _next
 
 export const refreshToken = attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	if (req.header('Authorization')) {
-		const refreshToken: string = req.header('Authorization')!.split(' ')[1] || '';
-		const [token, err] = await trialCapture(verifyJwtAsync(refreshToken, REFRESH_TOKEN_SECRET_KEY));
-		if (err) {
+		const oldRefreshToken: string = req.header('Authorization')!.split(' ')[1] || '';
+		const token = verifyJwtAsync(oldRefreshToken, REFRESH_TOKEN_SECRET_KEY).catch(()=> {
 			responseWithStatus(res, 0, 401, 'Unauthorized. Invalid refresh token.');
-		} else {
+		});
 			const accessToken = await signJwtAsync(
 				{
 					id: token.id,
@@ -136,7 +142,6 @@ export const refreshToken = attempt(async (req: Request, res: Response, _next: N
 				access_token: accessToken,
 				refresh_token: refreshToken,
 			});
-		}
 	} else {
 		responseWithStatus(res, 0, 401, 'Unauthorized. Invalid token.');
 	}
@@ -195,20 +200,14 @@ export const resetPassword = attempt(async (req: Request, res: Response, _next: 
 		const userEmail = req.body.data.email;
 		const userPassword = req.body.data.password;
 
-		const [tempTokenResult, tempTokenError] = await trialCapture(verifyJwtAsync(token, TEMPORARY_TOKEN_SECRET_KEY));
+		const tempTokenResult = verifyJwtAsync(token, TEMPORARY_TOKEN_SECRET_KEY);
 		if (tempTokenResult.id !== userEmail) {
 			throw new BadRequestError('Nice try lol');
 		}
-		if (tempTokenError) {
-			throw new Error(tempTokenError.message, { cause: tempTokenError });
-		}
-
-		const [userRegistrationResult, userRegistrationError] = await trialCapture(
-			await saveNewUserPasswordToDB(userEmail, userPassword)
-		);
-		if (userRegistrationError) {
-			throw new BadRequestError('Request failed, Email must be faulty');
-		}
+		const userRegistrationResult: Veri = await saveNewUserPasswordToDB(userEmail, userPassword)
+			.catch((err)=> {
+			throw new BadRequestError('Request failed, Email must be faulty', {cause: err});
+		});
 
 		const accessToken = await signJwtAsync({ id: userRegistrationResult.id }, ACCESS_TOKEN_SECRET_KEY, {
 			expiresIn: `${Number(ACCESS_TOKEN_EXPIRATION_TIME)}MINS`,

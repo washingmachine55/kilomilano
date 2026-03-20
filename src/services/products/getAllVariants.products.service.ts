@@ -1,4 +1,4 @@
-import pool from '@config/db.js';
+import pool from '#/config/db';
 
 export async function getAllProductsVariants(productId) {
 	// const conn = await pool.connect();

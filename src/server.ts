@@ -14,15 +14,19 @@ export const server = app.listen(APP_PORT, () => {
 
 if (NODE_ENV === 'dev') {
 	try {
-		await transporter.verify();
-		console.log('Server is ready to take our mail messages');
+		async () => {
+			await transporter.verify();
+		}
+		console.log('Mailpit Server is ready to take our mail messages');
 	} catch (err) {
-		console.error('Verification failed', err);
+		console.error('Mailpit Verification failed', err);
 	}
 }
 
-const dbConectionStatus = await pool.query('SELECT NOW()');
-console.log(dbConectionStatus.rows[0]);
+(async (): Promise<void> => {
+	const dbConectionStatus = await pool.query('SELECT NOW()');
+	console.log(dbConectionStatus.rows[0]);
+})();
 
 process.on('SIGTERM', () => {
 	console.debug('SIGTERM signal received: closing HTTP server');

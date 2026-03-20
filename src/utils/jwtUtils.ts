@@ -9,8 +9,8 @@ const { JsonWebTokenError } = jwt;
  * @param {Object} options - Additional options that can be set for JWT, such as expiration time and algorithm to use
  * @returns - Generated Token using the secret key
  */
-export function signJwtAsync(payload: JwtPayload, secret: string, options: SignOptions) {
-	return new Promise((resolve, reject) => {
+export function signJwtAsync(payload: JwtPayload, secret: string, options: SignOptions): any {
+	return new Promise((resolve, reject): any => {
 		jwt.sign(payload, secret, options, (err, token) => {
 			if (err) {
 				reject(err);
@@ -28,8 +28,8 @@ export function signJwtAsync(payload: JwtPayload, secret: string, options: SignO
  * @param {String} secret - Secret key, such as the ones used for access, refresh and temporary tokens from the ENV
  * @returns - Decoded payload from the JWT using the secret key
  */
-export function verifyJwtAsync(token: string, secret: Secret) {
-	return new Promise((resolve, reject) => {
+export function verifyJwtAsync(token: string, secret: Secret): any {
+	return new Promise((resolve, reject): any => {
 		jwt.verify(token, secret, (err, payload) => {
 			if (err) {
 				reject(err);

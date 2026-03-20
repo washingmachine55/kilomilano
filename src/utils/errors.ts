@@ -5,9 +5,10 @@ import type { NextFunction, Response, Request } from 'express';
  *  @param {Function} func - Async function which passes errors to the GEH middleware
  *  @returns null
  */
-export const attempt = (func: (req: Request, res: Response, next: NextFunction) => Promise<void>) => {
-	return (req: Request, res: Response, next: NextFunction) => {
-		func(req, res, next).catch((err: Error) => next(err));
+export const attempt = (func: (req: Request, res: Response, next: NextFunction) => Promise<any>) => {
+	return async (req: Request, res: Response, next: NextFunction) => {
+		console.log('[attempt] called', req.path);
+		return Promise.resolve(func(req, res, next).catch((err: unknown) => next(err)));
 	};
 };
 
@@ -18,9 +19,9 @@ export const attempt = (func: (req: Request, res: Response, next: NextFunction) 
  */
 export const trialCapture = async (promise: Promise<any>) => {
 	try {
-		const result: Promise<void> = await promise;
+		const result: Promise<any> = await promise;
 		return [result, null];
-	} catch (error: Error<any>) {
+	} catch (error: unknown) {
 		console.log(error);
 		return [null, error];
 	}
@@ -37,7 +38,7 @@ export class UnprocessableContentError extends Error {
 	constructor(message: string, details: Error | object | string | undefined = undefined) {
 		super(message); // Call the parent Error constructor
 		this.name = 'Unprocessable Content'; // Set a custom name
-		this.cause = details;
+		details = details;
 		this.message = message;
 		if (Error.captureStackTrace) {
 			Error.captureStackTrace(this, UnprocessableContentError);
@@ -57,7 +58,7 @@ export class BadRequestError extends Error {
 	constructor(message: string, details: Error | object | string | undefined = undefined) {
 		super(message); // Call the parent Error constructor
 		this.name = 'Bad Request Error'; // Set a custom name
-		this.cause = details;
+		details = details;
 		this.message = message;
 		if (Error.captureStackTrace) {
 			Error.captureStackTrace(this, UnprocessableContentError);
@@ -78,7 +79,7 @@ export class ConflictError extends Error {
 		super(message); // Call the parent Error constructor
 		this.name = 'Conflicting Record'; // Set a custom name
 		this.message = message;
-		this.cause = details;
+		details = details;
 		if (Error.captureStackTrace) {
 			Error.captureStackTrace(this, ConflictError);
 		}
@@ -98,7 +99,7 @@ export class NotFoundError extends Error {
 		super(message); // Call the parent Error constructor
 		this.name = 'Entity not found'; // Set a custom name
 		this.message = message;
-		this.cause = details;
+		details = details;
 		if (Error.captureStackTrace) {
 			Error.captureStackTrace(this, ConflictError);
 		}
@@ -118,7 +119,7 @@ export class ForbiddenError extends Error {
 		super(message); // Call the parent Error constructor
 		this.name = 'Forbidden Request'; // Set a custom name
 		this.message = message;
-		this.cause = details;
+		details = details;
 		if (Error.captureStackTrace) {
 			Error.captureStackTrace(this, ConflictError);
 		}
@@ -138,7 +139,7 @@ export class UnauthorizedError extends Error {
 		super(message); // Call the parent Error constructor
 		this.name = 'Unauthorized Request'; // Set a custom name
 		this.message = message;
-		this.cause = details;
+		details = details;
 		if (Error.captureStackTrace) {
 			Error.captureStackTrace(this, ConflictError);
 		}

@@ -1,5 +1,5 @@
 import { createClient } from 'redis';
-import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USER } from '@config/env-config';
+import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USER } from '#/config/env-config';
 
 const client = createClient({
 	url: `redis://${REDIS_HOST}:${Number(REDIS_PORT)}`,

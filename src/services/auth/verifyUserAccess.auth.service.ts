@@ -1,7 +1,7 @@
-import pool from '../config/db';
+import pool from '#/config/db';
 
 export default async function verifyUserAccessFromDatabase(userId) {
-	const conn = await pool.getConnection();
+	const conn = await pool.connect();
 
 	try {
 		const queryCheck = await conn.query(
@@ -19,6 +19,6 @@ export default async function verifyUserAccessFromDatabase(userId) {
 	} catch (err) {
 		console.error('Error verifying user:', err);
 	} finally {
-		conn.end();
+		conn.release();
 	}
 }

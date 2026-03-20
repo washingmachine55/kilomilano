@@ -1,4 +1,4 @@
-import pool from '../config/db.js';
+import pool from '#/config/db.js';
 import { UnprocessableContentError } from '../utils/errors.js';
 
 const tableNamesWhitelist = [
@@ -97,7 +97,10 @@ const fieldNameWhitelist = [
 ];
 
 export class RecordCheck {
-	constructor(field, table, request) {
+	field: string;
+	table: string;
+	request: string;
+	constructor(field: string, table: string, request: string) {
 		this.field = field;
 		this.table = table;
 		this.request = request;

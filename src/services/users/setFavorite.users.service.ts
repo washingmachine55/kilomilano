@@ -1,5 +1,5 @@
-import pool from '@config/db.js';
-import { ConflictError, NotFoundError } from '../../utils/errors.js';
+import pool from '#/config/db';
+import { ConflictError, NotFoundError } from '#/utils/errors.js';
 
 export const saveProductFavorite = async (userId, productVariantId) => {
 	// const conn = await pool.connect();

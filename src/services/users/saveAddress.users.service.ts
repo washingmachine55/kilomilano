@@ -1,5 +1,5 @@
-import pool from '@config/db.js';
-import { ConflictError, trialCapture, UnprocessableContentError } from '../../utils/errors.js';
+import pool from '#/config/db';
+import { ConflictError, trialCapture, UnprocessableContentError } from '#/utils/errors.js';
 
 export const saveAddress = async (addressName: string, addressInfo: string, userId: string) => {
 	const conn = await pool.connect();
@@ -34,35 +34,33 @@ export const saveAddress = async (addressName: string, addressInfo: string, user
 		);
 	} else {
 		await conn.query('BEGIN');
-		const [queryAddress, queryAddressError] = await trialCapture(
+		let queryAddressError;
+		let queryUsersError;
+		const queryAddress =
 			await conn
 				.query(
 					'INSERT INTO tbl_addresses (address_name, address_line, created_by) VALUES ($1,$2,$3) RETURNING id',
 					[addressName, addressInfo, userId]
 				)
 				.catch((err) => {
+					queryAddressError = true
 					throw new UnprocessableContentError(err.message);
-				})
-		);
+				});
 
-		// const [queryUsers, queryUsersError] = await trialCapture(await conn.query('UPDATE tbl_users_details SET addresses_id = $1 WHERE users_id = $2 RETURNING *', [queryAddress.rows[0].id, userId]).catch(err => {
-		// 	throw new UnprocessableContentError(err.message);
-		// }))
-		const [queryUsers, queryUsersError] = await trialCapture(
+		const queryUsers =
 			await conn
 				.query('INSERT INTO tbl_users_addresses (addresses_id, users_id) VALUES ($1,$2) RETURNING *', [
 					queryAddress.rows[0].id,
 					userId,
 				])
 				.catch((err) => {
-					console.debug(err);
+					queryUsersError = true
 					throw new UnprocessableContentError(err.message);
-				})
-		);
+				});
 
 		await conn.query('COMMIT');
 
-		if (queryUsersError || queryAddressError) {
+		if ((queryUsersError === true) || queryAddressError === true) {
 			await conn.query('ROLLBACK');
 			conn.release();
 			throw new Error("Something went wrong while trying to save the user's address");

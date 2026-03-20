@@ -1,15 +1,15 @@
-import pool from '@config/db.js';
-import { NotFoundError } from '../../utils/errors.js';
+import pool from '#/config/db';
+import { NotFoundError } from '#/utils/errors.js';
 import { getAllCategoriesDetails } from '../categories/getAll.categories.service.js';
 
-export async function getAllProductsDetails(categoriesName: string | undefined = undefined) {
+export async function getAllProductsDetails(categoriesName: string | undefined = undefined): Promise<any> {
 	// const conn = await pool.connect();
 
-	const allAvailableCategories: Array<string> = await getAllCategoriesDetails();
+	const allAvailableCategories: object = await getAllCategoriesDetails();
 	const allCategories: string[] = [];
-	allAvailableCategories.forEach((element: any) => {
-		allCategories.push(element.name.toLowerCase());
-	});
+	// allAvailableCategories.forEach((element: any) => {
+	// 	allCategories.push(element.name.toLowerCase());
+	// });
 
 	try {
 		if (categoriesName !== undefined) {

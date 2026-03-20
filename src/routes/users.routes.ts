@@ -9,8 +9,8 @@ import {
 	getUserAddresses,
 	saveUserAddress,
 	unsetUserAddresses,
-} from '@controllers/users.controller';
-import { uploadImages } from '@config/multer';
+} from '#/controllers/users.controller';
+import { uploadImages } from '#/config/multer';
 const router = express.Router();
 
 /**

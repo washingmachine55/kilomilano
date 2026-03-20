@@ -15,8 +15,9 @@ import { saveAddress } from '../services/users/saveAddress.users.service.js';
 import { isValidUUID } from '../utils/validateUUID.js';
 import { getAllUserAddresses } from '../services/users/getAllAddresses.users.service.js';
 import { deleteUserAddresses } from '../services/users/unsetAddresses.users.service.js';
+import type { NextFunction, Request, Response } from 'express';
 
-export async function uploadUserProfilePicture(req, res) {
+export async function uploadUserProfilePicture(req: Request, res: Response) {
 	if (!req.file) {
 		return await responseWithStatus(res, 0, 400, 'No image uploaded. Please upload an image before trying again.');
 	}
@@ -29,28 +30,28 @@ export async function uploadUserProfilePicture(req, res) {
 	}
 }
 
-export const getSingleUser = await attempt(async (req, res, next) => {
+export const getSingleUser = attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const userId = req.user.id
 	const result = await getSingleUserDetails(userId);
-	return await responseWithStatus(res, 1, 200, 'User profile details', { user_details: result });
+	return responseWithStatus(res, 1, 200, 'User profile details', { user_details: result });
 });
 
-export const saveUserAddress = await attempt(async (req, res, next) => {
+export const saveUserAddress = attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const addressName = req.body.data.address_name
 	const addressInfo = req.body.data.address_info
 	// const modifiedAddressInfo = await parseSingleAddressLine(addressInfo);
 	const result = await saveAddress(addressName, addressInfo, req.user.id);
-	return responseWithStatus(res, 1, 200, "User address saved successfully!", result)
+	await responseWithStatus(res, 1, 200, "User address saved successfully!", result)
 });
 
-export const getUserAddresses = await attempt(async (req, res, next) => {
+export const getUserAddresses = attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const result = await getAllUserAddresses(req.user.id);
-	return responseWithStatus(res, 1, 200, "User addresses fetched successfully!", result)
+	await responseWithStatus(res, 1, 200, "User addresses fetched successfully!", result)
 });
 
-export const unsetUserAddresses = await attempt(async (req, res, next) => {
+export const unsetUserAddresses = attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const result = await deleteUserAddresses(req.body.data.addresses_array, req.user.id);
-	return responseWithStatus(res, 1, 200, "User address removed successfully!", result)
+	await responseWithStatus(res, 1, 200, "User address removed successfully!", result)
 });
 
 export const editUserProfile = await attempt(async (req, res) => {
@@ -59,24 +60,24 @@ export const editUserProfile = await attempt(async (req, res) => {
 	const token = req.header('Authorization').split(' ')[1];
 	const verified = await verifyJwtAsync(token, env.ACCESS_TOKEN_SECRET_KEY);
 	const result = await editUserDetails(fieldsToUpdate, verified.id);
-	return await responseWithStatus(res, 1, 200, 'User profile edited successfully', result);
+	await responseWithStatus(res, 1, 200, 'User profile edited successfully', result);
 });
 
-export const setFavorite = await attempt(async (req, res, next) => {
+export const setFavorite = attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const userId = req.user.id;
 	const productVariantId = req.body.data.products_variants_id;
 	const result = await saveProductFavorite(userId, productVariantId);
 	await responseWithStatus(res, 1, 200, 'Product added to favorites', result);
 });
 
-export const unsetFavorite = await attempt(async (req, res, next) => {
+export const unsetFavorite = attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const userId = req.user.id;
 	const productsVariantsArray = req.body.data.products_variants_array;
 	const result = await deleteProductFavorite(userId, productsVariantsArray);
 	await responseWithStatus(res, 1, 200, 'Product(s) removed from favorites successfully!', result);
 });
 
-export const getFavorites = await attempt(async (req, res, next) => {
+export const getFavorites = attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const userId = req.user.id;
 	const result = await getAllProductsFavorites(userId);
 	await responseWithStatus(res, 1, 200, "User's favorite products", result);

@@ -5,7 +5,7 @@ import {
 	createPayment,
 	handlePaymentIntentSucceeded,
 	handlePaymentMethodAttached,
-} from '@controllers/payments.controller';
+} from '#/controllers/payments.controller';
 
 router.post('/new', createPayment);
 router.post('/confirm', handlePaymentIntentSucceeded);

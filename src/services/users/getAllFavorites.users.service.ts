@@ -1,5 +1,5 @@
-import pool from '@config/db';
-import { NotFoundError } from '@utils/errors';
+import pool from '#/config/db';
+import { NotFoundError } from '#/utils/errors';
 
 export async function getAllProductsFavorites(userId) {
 	const result = await pool.query(

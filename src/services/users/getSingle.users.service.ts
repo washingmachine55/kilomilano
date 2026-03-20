@@ -1,4 +1,4 @@
-import pool from '@config/db.js';
+import pool from '#/config/db';
 import { GET_ALL_USER_DETAILS_BY_ID } from '../../providers/commonQueries.providers.js';
 
 export async function getSingleUserDetails(userId) {

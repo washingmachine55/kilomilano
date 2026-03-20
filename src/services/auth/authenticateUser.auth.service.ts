@@ -1,4 +1,4 @@
-import pool from '@config/db';
+import pool from '#/config/db';
 import bcrypt from 'bcryptjs';
 import { CASE_EMAIL_CHECK, GET_ALL_USER_DETAILS_BY_EMAIL } from '../../providers/commonQueries.providers';
 import type { QueryResult } from 'pg';
@@ -13,12 +13,12 @@ export async function isCredentialsMatching(userEmail: string, userPassword: str
 
 		try {
 			if (result === true) {
-				const getHashedPasswordFromDB: QueryResult<any> = await pool.query(
+				const getHashedPasswordFromDB: QueryResult<string[]> = await pool.query(
 					'SELECT password_hash FROM tbl_users WHERE email = $1;',
 					[userEmail]
 				);
 
-				const hashedPasswordFromDB = Object.values(getHashedPasswordFromDB.rows[0])[0];
+				const hashedPasswordFromDB: string = Object.values(getHashedPasswordFromDB.rows[0])[0];
 				const bcryptResult = await bcrypt.compare(userPassword, hashedPasswordFromDB).catch((err) => {
 					throw new Error("Error occurred while trying to encrypt user's password", { cause: err });
 				});
@@ -54,7 +54,7 @@ export async function getUserId(userEmail: string, userPassword: string) {
 
 		try {
 			if (result === true) {
-				const getHashedPasswordFromDB = await pool.query(
+				const getHashedPasswordFromDB: QueryResult<string[]> = await pool.query(
 					'SELECT password_hash FROM tbl_users WHERE email = $1;',
 					[userEmail]
 				);

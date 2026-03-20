@@ -1,5 +1,6 @@
 import swaggerJsdoc from 'swagger-jsdoc';
-import packageJson from '../../package.json' with { type: 'json' };
+// import packageJson from '../../package.json' with { type: 'json' };
+import packageJson from '../../package.json';
 import { APP_NAME, BASE_URL } from './env-config.js';
 
 const options = {
@@ -58,7 +59,7 @@ const options = {
 			},
 		],
 	},
-	apis: ['./src/routes/**.js', '../app.js'],
+	apis: ['./src/routes/**.js', './src/routes/*.*.ts', '../app.js'],
 };
 
 export const openapiSpecification = swaggerJsdoc(options);

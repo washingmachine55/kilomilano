@@ -1,5 +1,5 @@
-import pool from '@config/db.js';
-import { NotFoundError } from '../../utils/errors.js';
+import pool from '#/config/db';
+import { NotFoundError } from '#/utils/errors.js';
 
 export async function deleteUserAddresses(addressesArray, userId) {
 	const conn = await pool.connect();

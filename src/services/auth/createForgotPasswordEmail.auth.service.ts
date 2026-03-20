@@ -1,10 +1,10 @@
-import pool from '@config/db';
+import pool from '#/config/db';
 
 import { TZDate } from '@date-fns/tz';
 import { formatDate, formatDistance } from 'date-fns';
-import transporter from '@config/mailTransporter.js';
-import { getRandomOTP } from '../../utils/getRandomOTP.js';
-import { GET_USER_ID_FROM_EMAIL } from '../../providers/commonQueries.providers';
+import transporter from '#/config/mailTransporter.js';
+import { getRandomOTP } from '#/utils/';
+import { GET_USER_ID_FROM_EMAIL } from '#/providers/commonQueries.providers';
 
 export async function createForgotPasswordEmail(userEmail) {
 	const currentTimestamp = new Date();
@@ -22,7 +22,8 @@ export async function createForgotPasswordEmail(userEmail) {
 	const ConvertExpirationTimestampToLocal = TZDate.tz(
 		process.env.CURRENT_TZ,
 		expirationTimestamp
-	).internal.toISOString();
+	).toISOString();
+	// ).internal.toISOString();
 	const formattedExpirationTimestamp = formatDate(ConvertExpirationTimestampToLocal, 'PPPPpp').concat(' PKT');
 
 	const otp = getRandomOTP();
@@ -51,12 +52,14 @@ export async function createForgotPasswordEmail(userEmail) {
 		const unexpiredOTPDate = TZDate.tz(
 			process.env.CURRENT_TZ,
 			getUnexpiredOTPEmailDetails.rows[0].date_expiration
-		).internal.toISOString();
+		).toISOString();
+		// ).internal.toISOString();
 		const formattedUnexpiredTimestamp = formatDate(unexpiredOTPDate, 'PPPPpp').concat(' PKT');
 
 		const unexpiredTimeDifferenceForHumans = formatDistance(
 			unexpiredOTPDate,
-			TZDate.tz(process.env.CURRENT_TZ, currentTimestampISO).internal.toISOString(),
+			TZDate.tz(process.env.CURRENT_TZ, currentTimestampISO).toISOString(),
+			// TZDate.tz(process.env.CURRENT_TZ, currentTimestampISO).internal.toISOString(),
 			{
 				addSuffix: true,
 				includeSeconds: true,

@@ -1,9 +1,9 @@
-import pool from '@config/db.js';
-import { RecordCheck } from '../../providers/recordChecks.providers.js';
-import { NotFoundError, UnprocessableContentError } from '../../utils/errors.js';
+import pool from '#/config/db';
+import { RecordCheck } from '#/providers/recordChecks.providers';
+import { NotFoundError, UnprocessableContentError } from '#/utils/errors.js';
 import format from 'pg-format';
-import { extractedUuidSchema, UUIDSchema } from '../../utils/schema.validations.js';
-import { isValidUUID } from '../../utils/validateUUID.js';
+import { extractedUuidSchema, UUIDSchema } from '#/utils/schema.validations.js';
+import { isValidUUID } from '#/utils/validateUUID.js';
 
 export async function saveOrder(data, userId) {
 	const conn = await pool.connect();
