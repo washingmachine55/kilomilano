@@ -1,7 +1,9 @@
 // import jwt from 'jsonwebtoken';
 import { env, loadEnvFile } from 'node:process';
-import { responseWithStatus } from '../utils/responses.js';
-import { verifyJwtAsync } from '../utils/jwtUtils.js';
+import { responseWithStatus } from '#/utils/responses.js';
+import { verifyJwtAsync } from '#/utils/jwtUtils.js';
+import { RecordCheck } from '#/providers/recordChecks.providers.js';
+import { NotFoundError } from '#/utils/errors.js';
 loadEnvFile();
 
 const verifyToken = async (req, res, next) => {
@@ -11,8 +13,11 @@ const verifyToken = async (req, res, next) => {
 		} else {
 			const token = req.header('Authorization').split(' ')[1];
 			try {
-				// const verified = jwt.verify(token, env.ACCESS_TOKEN_SECRET_KEY);
 				const verified = await verifyJwtAsync(token, env.ACCESS_TOKEN_SECRET_KEY);
+				const checkIfUserExists = new RecordCheck('id','tbl_users',verified.id)
+				if (!await checkIfUserExists.getResult()) {
+					throw new NotFoundError("User not found");
+				}
 				req.user = verified;
 				next();
 			} catch (err) {

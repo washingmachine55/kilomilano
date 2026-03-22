@@ -20,7 +20,7 @@ import {
 	TEMPORARY_TOKEN_EXPIRATION_TIME,
 } from '../config/env-config';
 
-export const registerUser = attempt(async (req: Request, res: Response, next?: NextFunction) => {
+export const registerUser = await attempt(async (req: Request, res: Response, next: NextFunction) => {
 	const request: string[] = Object.values(req.body.data);
 	const userName: string = request[0]!;
 	const userEmail: string = request[1]!;
@@ -29,15 +29,10 @@ export const registerUser = attempt(async (req: Request, res: Response, next?: N
 	// --------------------------------------------------------------------------- //
 	// Check if email exists in database already
 	// --------------------------------------------------------------------------- //
-	console.log('before response');
-	console.log(await checkExistingEmail_v2(userEmail));
-
 	const existingEmailCheck = await checkExistingEmail_v2(userEmail);
-	console.log('after response');
 	if (existingEmailCheck === true) {
 		throw new ForbiddenError(
-			'Cant register user as user email already exists. Please sign in instead',
-			'unable to wables'
+			'Cant register user as user email already exists. Please sign in instead'
 		);
 	} else {
 		// --------------------------------------------------------------------------- //
@@ -60,7 +55,7 @@ export const registerUser = attempt(async (req: Request, res: Response, next?: N
 	}
 });
 
-export const loginUser = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const loginUser = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const userEmail = req.body.data.email;
 	const userPassword = req.body.data.password;
 	// --------------------------------------------------------------------------- //
@@ -98,7 +93,7 @@ interface Veri {
 	id: string;
 }
 
-export const verifyUserToken = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const verifyUserToken = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	if (!req.header('Authorization')) {
 		responseWithStatus(res, 0, 401, 'Unauthorized. Access Denied. Please login.');
 	} else {
@@ -114,7 +109,7 @@ export const verifyUserToken = attempt(async (req: Request, res: Response, _next
 	}
 });
 
-export const refreshToken = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const refreshToken = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	if (req.header('Authorization')) {
 		const oldRefreshToken: string = req.header('Authorization')!.split(' ')[1] || '';
 		const token = verifyJwtAsync(oldRefreshToken, REFRESH_TOKEN_SECRET_KEY).catch(()=> {
@@ -147,7 +142,7 @@ export const refreshToken = attempt(async (req: Request, res: Response, _next: N
 	}
 });
 
-export const forgotPassword = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const forgotPassword = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const userEmail = Object.values(req.body.data).toString();
 
 	const existingEmailCheck = await checkExistingEmail_v2(userEmail);
@@ -164,7 +159,7 @@ export const forgotPassword = attempt(async (req: Request, res: Response, _next:
 	}
 });
 
-export const verifyOTP = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const verifyOTP = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const userEmail: string = req.body.data.email;
 	const userOTP: number = Number(req.body.data.otp);
 
@@ -192,7 +187,7 @@ export const verifyOTP = attempt(async (req: Request, res: Response, _next: Next
 	}
 });
 
-export const resetPassword = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const resetPassword = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	if (!req.header('Authorization')) {
 		responseWithStatus(res, 0, 401, 'Unauthorized. Access Denied. Please request another OTP.');
 	} else {

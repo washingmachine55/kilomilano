@@ -1,5 +1,5 @@
 import { responseWithStatus } from '../utils/responses.js';
-import z from 'zod';
+import z, { ZodError } from 'zod';
 import {
 	authRegisterSchema,
 	authResetPasswordSchema,
@@ -11,8 +11,9 @@ import {
 	userFavoriteProductSchema,
 	userUnsetFavoriteProductSchema,
 } from '../utils/schema.validations.js';
+import type {Request, Response, NextFunction} from 'express';
 
-export const globallyVerifyInputFields = async (req, res, next) => {
+export const globallyVerifyInputFields = async (req: Request, res: Response, next?: NextFunction) => {
 	let reqData;
 	const successTrial = async (reqData) => {
 		if (!reqData.success) {

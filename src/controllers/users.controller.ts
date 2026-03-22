@@ -30,13 +30,13 @@ export async function uploadUserProfilePicture(req: Request, res: Response) {
 	}
 }
 
-export const getSingleUser = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const getSingleUser = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const userId = req.user.id
 	const result = await getSingleUserDetails(userId);
 	return responseWithStatus(res, 1, 200, 'User profile details', { user_details: result });
 });
 
-export const saveUserAddress = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const saveUserAddress = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const addressName = req.body.data.address_name
 	const addressInfo = req.body.data.address_info
 	// const modifiedAddressInfo = await parseSingleAddressLine(addressInfo);
@@ -44,17 +44,17 @@ export const saveUserAddress = attempt(async (req: Request, res: Response, _next
 	await responseWithStatus(res, 1, 200, "User address saved successfully!", result)
 });
 
-export const getUserAddresses = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const getUserAddresses = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const result = await getAllUserAddresses(req.user.id);
 	await responseWithStatus(res, 1, 200, "User addresses fetched successfully!", result)
 });
 
-export const unsetUserAddresses = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const unsetUserAddresses = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const result = await deleteUserAddresses(req.body.data.addresses_array, req.user.id);
 	await responseWithStatus(res, 1, 200, "User address removed successfully!", result)
 });
 
-export const editUserProfile = await attempt(async (req, res) => {
+export const editUserProfile = await await attempt(async (req, res) => {
 	const allowedFields = ['name', 'email', 'password', 'confirmed_password'];
 	const fieldsToUpdate = await allowedFieldsFunc(allowedFields, req.body.data);
 	const token = req.header('Authorization').split(' ')[1];
@@ -63,21 +63,21 @@ export const editUserProfile = await attempt(async (req, res) => {
 	await responseWithStatus(res, 1, 200, 'User profile edited successfully', result);
 });
 
-export const setFavorite = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const setFavorite = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const userId = req.user.id;
 	const productVariantId = req.body.data.products_variants_id;
 	const result = await saveProductFavorite(userId, productVariantId);
 	await responseWithStatus(res, 1, 200, 'Product added to favorites', result);
 });
 
-export const unsetFavorite = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const unsetFavorite = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const userId = req.user.id;
 	const productsVariantsArray = req.body.data.products_variants_array;
 	const result = await deleteProductFavorite(userId, productsVariantsArray);
 	await responseWithStatus(res, 1, 200, 'Product(s) removed from favorites successfully!', result);
 });
 
-export const getFavorites = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const getFavorites = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const userId = req.user.id;
 	const result = await getAllProductsFavorites(userId);
 	await responseWithStatus(res, 1, 200, "User's favorite products", result);

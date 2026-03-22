@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 import type { NextFunction, Response, Request } from 'express';
 
 
-export const createPayment = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const createPayment = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 	const userID: string = req.user!['id'];

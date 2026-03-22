@@ -31,7 +31,7 @@ import { CASE_EMAIL_CHECK } from '../../providers/commonQueries.providers';
 // }
 
 export async function checkExistingEmail_v2(request: string) {
-	const emailCheck = await pool.query(CASE_EMAIL_CHECK, [request]);	
+	const emailCheck = await pool.query(CASE_EMAIL_CHECK, [request])
 	if (emailCheck.rows[0].existscheck === true) {
 		return true;
 	} else {

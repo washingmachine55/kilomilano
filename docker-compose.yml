@@ -53,8 +53,9 @@ services:
         restart: true
       mailpit:
         condition: service_started
-    restart: on-failure
-    # restart: unless-stopped
+    # restart: on-failure
+    restart: unless-stopped
+    tty: true
     ports:
     - 3000:3000
     env_file:
@@ -62,7 +63,8 @@ services:
     volumes:
       - ./public/images/uploads:/app/public/images/uploads
     post_start:
-      - command: ./docker-scripts/node-startup-fresh.sh
+      - command: [./docker-scripts/node-startup-fresh.sh]
+        user: root
     develop:
       watch:
         - action: sync

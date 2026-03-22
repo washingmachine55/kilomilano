@@ -100,6 +100,12 @@ export class RecordCheck {
 	field: string;
 	table: string;
 	request: string;
+	/**
+	 * 
+	 * @param field <String> - Field name to check from
+	 * @param table <String> - Table name to check from
+	 * @param request <String> - Request string to check
+	 */
 	constructor(field: string, table: string, request: string) {
 		this.field = field;
 		this.table = table;

@@ -54,6 +54,7 @@ import {
 	BadRequestError,
 	ConflictError,
 	ForbiddenError,
+	getErrorMessage,
 	NotFoundError,
 	UnauthorizedError,
 	UnprocessableContentError,
@@ -64,7 +65,14 @@ import jwt from 'jsonwebtoken';
 import Stripe from 'stripe';
 const { JsonWebTokenError } = jwt;
 
-app.use((err: multer.MulterError | Error, req: Request, res: Response, next: NextFunction) => {
+
+interface ErrorTypes {
+	message: string;
+	name: string;
+	cause?: string | object | unknown;
+}
+
+app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
 	if (err instanceof multer.MulterError) {
 		if (err.code === 'LIMIT_FILE_SIZE') {
 			return responseWithStatus(
@@ -72,7 +80,11 @@ app.use((err: multer.MulterError | Error, req: Request, res: Response, next: Nex
 				0,
 				413,
 				`File is too large. Maximum size is ${Number(process.env['UPLOAD_FILE_MAX_SIZE']) / (1000 * 1000)} MB.`,
-				{ error_details: err.message }
+				{ 
+					error_details: err.message,
+					error_type: err.name,
+					...(err.cause && { error_cause: err.cause })
+				}
 			);
 		} else if (err.code === 'MISSING_FIELD_NAME') {
 			return responseWithStatus(
@@ -80,62 +92,103 @@ app.use((err: multer.MulterError | Error, req: Request, res: Response, next: Nex
 				0,
 				415,
 				'Form field does not satisfy requirement. Please enter the correct field name for uploading the file.',
-				{ error_details: err.message }
+				{ 
+					error_details: err.message,
+					error_type: err.name,
+					...(err.cause && { error_cause: err.cause })
+				}
 			);
 		} else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-			return responseWithStatus(
-				res,
-				0,
-				415,
+			return responseWithStatus( res, 0, 415,
 				'Form field does not satisfy requirement. Please enter the correct field name for uploading the file.',
-				{ error_details: err.message }
+				{ 
+					error_details: err.message,
+					error_type: err.name,
+					...(err.cause && { error_cause: err.cause })
+				}
 			);
 		} else {
-			return responseWithStatus(res, 0, 500, err.message, { error_type: err.name });
+			return responseWithStatus(res, 0, 500, err.message, { 
+				error_type: err.name,
+				...(err.cause && { error_cause: err.cause })
+			});
 		}
 	} else if (err instanceof JsonWebTokenError) {
-		return responseWithStatus(res, 0, 401, 'Invalid token. Please login or Register', { error_type: err.message });
+		return responseWithStatus(res, 0, 401, 'Invalid token. Please login or Register', { 
+			error_type: err.message,
+			...(err.cause && { error_cause: err.cause })
+		});
 	} else if (err instanceof BadRequestError) {
-		return responseWithStatus(res, 0, 400, err.message, { error_type: err.name });
+		return responseWithStatus(res, 0, 400, err.message, { 
+			error_type: err.name,
+			...(err.cause && { error_cause: err.cause })
+		});
 	} else if (err instanceof UnauthorizedError) {
-		return responseWithStatus(res, 0, 401, err.message, { error_type: err.name });
+		return responseWithStatus(res, 0, 401, err.message, { 
+			error_type: err.name,
+			...(err.cause && { error_cause: err.cause })
+		});
 	} else if (err instanceof ForbiddenError) {
-		return responseWithStatus(res, 0, 403, err.message, { error_type: err.name });
+		return responseWithStatus(res, 0, 403, err.message, { 
+			error_type: err.name,
+			...(err.cause && { error_cause: err.cause })
+		});
 	} else if (err instanceof NotFoundError) {
-		return responseWithStatus(res, 0, 404, err.message, { error_type: err.name });
+		return responseWithStatus(res, 0, 404, err.message, { 
+			error_type: err.name,
+			...(err.cause && { error_cause: err.cause })
+		});
 	} else if (err instanceof ConflictError) {
-		console.debug(err);
-		return responseWithStatus(res, 0, 409, err.message, { error_type: err.name, error_cause: err.cause });
+		return responseWithStatus(res, 0, 409, err.message, { 
+			error_type: err.name,
+			...(err.cause && { error_cause: err.cause })
+		});
 	} else if (err instanceof UnprocessableContentError) {
-		return responseWithStatus(res, 0, 422, err.message, { error_type: err.name });
+		return responseWithStatus(res, 0, 422, err.message, { 
+			error_type: err.name,
+			...(err.cause && { error_cause: err.cause })
+		});
 	} else if (err instanceof ZodError) {
-		return responseWithStatus(res, 0, 400, err.name, { cause: err });
+		console.log("cause: ", err);
+		return responseWithStatus(res, 0, 400, err.name, {
+			// cause: err ,
+			error_type: err.name,
+			...(err.cause && { error_cause: err.cause })
+		});
+	} else if (err instanceof Stripe.errors.StripeError) {
+		switch (err.type) {
+			case 'StripeCardError':
+				// A declined card error
+				return responseWithStatus(res, 0, 500, err.name, err.message);
+			case 'StripeRateLimitError':
+				// Too many requests made to the API too quickly
+				return responseWithStatus(res, 0, 500, err.name, err.message);
+			case 'StripeInvalidRequestError':
+				// Invalid parameters were supplied to Stripe's API
+				return responseWithStatus(res, 0, 500, err.name, err.message);
+			case 'StripeAPIError':
+				// An error occurred internally with Stripe's API
+				return responseWithStatus(res, 0, 500, err.name, err.message);
+			case 'StripeConnectionError':
+				// Some kind of error occurred during the HTTPS communication
+				return responseWithStatus(res, 0, 500, err.name, err.message);
+			case 'StripeAuthenticationError':
+				// You probably used an incorrect API key
+				return responseWithStatus(res, 0, 500, err.name, err.message);
+			default:
+				// Handle any other types of unexpected errors
+				return responseWithStatus(res, 0, 500, err.name, err.message);
+		} 
 	} else {
-		if (err instanceof Stripe.errors.StripeError) {
-			switch (err.type) {
-				case 'StripeCardError':
-					// A declined card error
-					return responseWithStatus(res, 0, 500, err.name, err.message);
-				case 'StripeRateLimitError':
-					// Too many requests made to the API too quickly
-					return responseWithStatus(res, 0, 500, err.name, err.message);
-				case 'StripeInvalidRequestError':
-					// Invalid parameters were supplied to Stripe's API
-					return responseWithStatus(res, 0, 500, err.name, err.message);
-				case 'StripeAPIError':
-					// An error occurred internally with Stripe's API
-					return responseWithStatus(res, 0, 500, err.name, err.message);
-				case 'StripeConnectionError':
-					// Some kind of error occurred during the HTTPS communication
-					return responseWithStatus(res, 0, 500, err.name, err.message);
-				case 'StripeAuthenticationError':
-					// You probably used an incorrect API key
-					return responseWithStatus(res, 0, 500, err.name, err.message);
-				default:
-					// Handle any other types of unexpected errors
-					return responseWithStatus(res, 0, 500, err.name, err.message);
-			}
-		}
+		// Handle any other types of unexpected errors
+		console.log('Erro caught by GEH: ', err)
+		
+		const errorMessage = err instanceof Error ? err.message : String(err);
+		const errorName = err instanceof Error ? err.name : 'Unknown Error';
+		return responseWithStatus(res, 0, 500, errorMessage, { 
+			error_type: errorName,
+			...(err instanceof Error && err.cause && { error_cause: err.cause })
+		});
 	}
 });
 

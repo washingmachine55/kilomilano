@@ -4,7 +4,7 @@ import { attempt, NotFoundError } from '#/utils/errors.js';
 import { responseWithStatus } from '#/utils/responses.js';
 import type { NextFunction, Response, Request } from 'express';
 
-export const getAllProducts = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const getAllProducts = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	if (req.query.category !== undefined) {
 		const userQuery: string = req.query.category.toString();
 		const result = await getAllProductsDetails(userQuery);
@@ -27,7 +27,7 @@ export const getAllProducts = attempt(async (req: Request, res: Response, _next:
 	}
 });
 
-export const getAllProductVariants = attempt(async (req: Request, res: Response, _next: NextFunction) => {
+export const getAllProductVariants = await attempt(async (req: Request, res: Response, _next: NextFunction) => {
 	// const parsedParam = req.params.productId.trim()
 
 	const result = await getAllProductsVariants(req.params.productId);
